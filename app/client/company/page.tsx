@@ -42,6 +42,12 @@ export default function Company() {
   const [org, setOrg] = useState<Organization | null>(null);
   const [ent, setEnt] = useState<Enterprise | null>(null);
 
+  // Colonnes réellement présentes dans public.enterprises au moment du chargement.
+  // Elles servent à éviter d'envoyer au PATCH des colonnes inexistantes.
+  const [enterpriseColumns, setEnterpriseColumns] = useState<Set<string>>(
+    new Set()
+  );
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -103,6 +109,7 @@ export default function Company() {
 
         setOrg(organization);
         setEnt(enterprise);
+        setEnterpriseColumns(new Set(Object.keys(enterprise as Record<string, unknown>)));
       } catch (err: any) {
         setError(
           err?.message ||
@@ -128,23 +135,52 @@ export default function Company() {
     try {
       const sb = createClient();
 
+      // IMPORTANT : hasOwnProperty(ent, "city") n'indique pas si la colonne
+      // existe dans Supabase : updateField() peut ajouter cette propriété
+      // côté React. On s'appuie donc uniquement sur les colonnes réellement
+      // retournées par .select("*") au chargement.
+      const editableFields = [
+        "legal_name",
+        "registration_number",
+        "sector",
+        "address",
+        "country",
+        "website",
+        "city",
+        "postal_code",
+        "establishment_date",
+      ] as const;
+
+      const payload: Record<string, string | null> = {};
+
+      for (const field of editableFields) {
+        if (enterpriseColumns.has(field)) {
+          payload[field] = ent[field] ?? null;
+        }
+      }
+
+      if (Object.keys(payload).length === 0) {
+        throw new Error(
+          "Aucune colonne modifiable de l’entreprise n’a été trouvée dans la base de données."
+        );
+      }
+
       const { error: updateError } = await sb
         .from("enterprises")
-        .update({
-          legal_name: ent.legal_name,
-          registration_number: ent.registration_number,
-          sector: ent.sector,
-          address: ent.address,
-          country: ent.country,
-          website: ent.website,
-          ...(Object.prototype.hasOwnProperty.call(ent, "city") ? { city: ent.city } : {}),
-          ...(Object.prototype.hasOwnProperty.call(ent, "postal_code") ? { postal_code: ent.postal_code } : {}),
-          ...(Object.prototype.hasOwnProperty.call(ent, "establishment_date") ? { establishment_date: ent.establishment_date } : {}),
-        })
+        .update(payload)
         .eq("id", ent.id);
 
       if (updateError) {
-        throw updateError;
+        throw new Error(
+          [
+            updateError.message,
+            updateError.code ? `Code : ${updateError.code}` : "",
+            updateError.details ? `Détails : ${updateError.details}` : "",
+            updateError.hint ? `Indication : ${updateError.hint}` : "",
+          ]
+            .filter(Boolean)
+            .join(" ")
+        );
       }
 
       setSuccess("Les informations de votre entreprise ont été enregistrées.");
@@ -696,7 +732,28 @@ export default function Company() {
 
 function SmartPlaceField({label, icon, value, onChange, kind, placeholder}:{label:string;icon:ReactNode;value:string;onChange:(v:string)=>void;kind:"country"|"city"|"postal";placeholder:string}){
   const [suggestions,setSuggestions]=useState<string[]>([]);
-  const countries=useMemo(()=>{try{const codes=(Intl as any).supportedValuesOf?.("region")||[]; const dn=new Intl.DisplayNames(["fr"],{type:"region"}); return codes.map((c:string)=>dn.of(c)||c).filter(Boolean).sort((a:string,b:string)=>a.localeCompare(b,"fr"));}catch{return ["Afrique du Sud","Algérie","Allemagne","Belgique","Burkina Faso","Cameroun","Canada","Côte d’Ivoire","France","Ghana","Mali","Maroc","Niger","Nigeria","Sénégal","Suisse","Togo"]}},[]);
+  const countries = useMemo(
+    () => [
+      "Afrique du Sud",
+      "Algérie",
+      "Allemagne",
+      "Belgique",
+      "Burkina Faso",
+      "Cameroun",
+      "Canada",
+      "Côte d’Ivoire",
+      "France",
+      "Ghana",
+      "Mali",
+      "Maroc",
+      "Niger",
+      "Nigeria",
+      "Sénégal",
+      "Suisse",
+      "Togo",
+    ],
+    []
+  );
   useEffect(()=>{let cancelled=false; if((kind!=="country")&&value.trim().length>=3){const timer=setTimeout(async()=>{try{const q=encodeURIComponent(value.trim()); const url=kind==="postal"?`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&q=${q}`:`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&city=${q}`; const r=await fetch(url,{headers:{"Accept-Language":"fr"}}); const data=await r.json(); const vals=(data||[]).map((x:any)=>kind==="postal"?(x.address?.postcode?`${x.address.postcode} · ${x.address.city||x.address.town||x.address.village||x.display_name}`:x.display_name):(x.address?.city||x.address?.town||x.address?.village||x.name)).filter(Boolean); if(!cancelled)setSuggestions(Array.from(new Set(vals)).slice(0,6) as string[]);}catch{if(!cancelled)setSuggestions([])}},300); return()=>{cancelled=true;clearTimeout(timer)}}else setSuggestions([]); return()=>{}},[value,kind]);
   const listId=`tolbo-${kind}-suggestions`; const filtered=kind==="country"&&value.length>=3?countries.filter((c: string)=>c.toLocaleLowerCase("fr").includes(value.toLocaleLowerCase("fr"))).slice(0,8):suggestions;
   return <div><label className="label">{label}</label><div className="relative"><span className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-slate-400">{icon}</span><input className="field pl-10" list={listId} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} autoComplete="off"/><datalist id={listId}>{filtered.map((x: string)=><option key={x} value={x}/>)}</datalist></div>{value.length>=3&&<span className="tolbo-smart-hint">Suggestions activées · sélectionnez une proposition ou continuez votre saisie</span>}</div>

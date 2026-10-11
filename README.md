@@ -50,3 +50,4 @@ npm run audit
 - réduction des animations lorsque `prefers-reduced-motion` est actif ;
 - SEO, robots, sitemap et URL canonique conservés ;
 - aucun secret Supabase ne doit être placé côté navigateur.
+"# Site-web-GULGO" 

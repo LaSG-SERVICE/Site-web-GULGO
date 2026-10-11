@@ -1,7 +1,7 @@
-# Architecture TOLBO Web V1
+# Architecture gulgo Web V1
 
 ## 1. Vision
-TOLBO est une application B2B multi-tenant : plusieurs entreprises clientes disposent de leurs propres comptes, membres, données, documents, évaluations et demandes, tandis que le personnel TOLBO dispose d'un back-office transversal.
+gulgo est une application B2B multi-tenant : plusieurs entreprises clientes disposent de leurs propres comptes, membres, données, documents, évaluations et demandes, tandis que le personnel gulgo dispose d'un back-office transversal.
 
 ## 2. Stack
 - Next.js 16 App Router + TypeScript
@@ -24,9 +24,9 @@ TOLBO est une application B2B multi-tenant : plusieurs entreprises clientes disp
 - validation des types et tailles de fichiers
 
 ## 5. Identité visuelle
-Le logo officiel TOLBO est `public/branding/tolbo-logo.svg`. Chaque organisation possède son propre `logo_url`. Le composant `LogoUploader` permet au client de déposer/modifier son logo.
+Le logo officiel gulgo est `public/branding/gulgo-logo.svg`. Chaque organisation possède son propre `logo_url`. Le composant `LogoUploader` permet au client de déposer/modifier son logo.
 
-> Le fichier SVG présent dans le starter est un emplacement technique de démonstration. Remplacer ce fichier par le logo officiel TOLBO fourni par l'entreprise avant production.
+> Le fichier SVG présent dans le starter est un emplacement technique de démonstration. Remplacer ce fichier par le logo officiel gulgo fourni par l'entreprise avant production.
 
 ## 6. Score Pass
 Le moteur officiel est côté serveur (`lib/scorepass/engine.ts`). Les paramètres issus du classeur sont archivés dans `data/scorepass-v1.json`. La base est conçue pour stocker la version méthodologique, les variables, preuves, dimensions, scores, hard gates, anomalies et sorties.

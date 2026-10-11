@@ -35,7 +35,7 @@ export default function Page() {
   ).length;
 
   return (
-    <div className="tolbo-client-page tolbo-members-page space-y-8">
+    <div className="gulgo-client-page gulgo-members-page space-y-8">
       {/* ============================================================
           HEADER
       ============================================================ */}
@@ -55,7 +55,7 @@ export default function Page() {
 
             <p className="mt-3 max-w-xl text-sm leading-6 text-white/65 md:text-base">
               Gérez les utilisateurs rattachés à votre organisation et
-              contrôlez leurs niveaux d&apos;accès à l&apos;espace TOLBO.
+              contrôlez leurs niveaux d&apos;accès à l&apos;espace gulgo.
             </p>
           </div>
 

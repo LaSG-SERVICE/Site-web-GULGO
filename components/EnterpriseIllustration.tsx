@@ -9,19 +9,19 @@ const icons: Record<Variant, ReactNode> = {
 const titles: Record<Variant,string> = {company:"Profil entreprise",evaluations:"Évaluation",documents:"Documents",requests:"Demandes",members:"Organisation",notifications:"Activité",score:"Score Pass",settings:"Configuration"};
 
 export function EnterpriseIllustration({variant}:{variant:Variant}){
-  return <div className={`tolbo-illustration tolbo-illustration-${variant}`} aria-hidden="true">
-    <div className="tolbo-illustration-orbit orbit-one"/><div className="tolbo-illustration-orbit orbit-two"/>
-    <div className="tolbo-illustration-frame">
-      <div className="tolbo-illustration-toolbar"><div className="tolbo-window-dots"><i/><i/><i/></div><span className="tolbo-toolbar-title">TOLBO <em>/</em> ESPACE ENTREPRISE</span><span className="tolbo-toolbar-secure"><LockKeyhole size={9}/> SECURE</span></div>
-      <div className="tolbo-illustration-body">
-        <div className="tolbo-illustration-sidebar"><b/><i/><i/><i/><i/><i/><span/></div>
-        <div className="tolbo-illustration-canvas">
-          <div className="tolbo-illustration-title"><span className="tolbo-illustration-icon">{icons[variant]}</span><div><b>{titles[variant]}</b><small>ESPACE ENTREPRISE · TOLBO</small></div><ArrowUpRight className="tolbo-mini-arrow" size={12}/></div>
-          <div className="tolbo-illustration-widgets"><span><b>17%</b><small>COMPLÉTUDE</small></span><span><b>01</b><small>DOSSIER</small></span><span><b>ACTIF</b><small>STATUT</small></span></div>
-          <div className="tolbo-illustration-detail"><div className="tolbo-illustration-chart"><i/><i/><i/><i/><i/><i/></div><div className="tolbo-illustration-lines"><span/><span/><span/><span/></div><div className="tolbo-illustration-check"><CheckCircle2 size={12}/><small>ESPACE CONTRÔLÉ</small></div></div>
+  return <div className={`gulgo-illustration gulgo-illustration-${variant}`} aria-hidden="true">
+    <div className="gulgo-illustration-orbit orbit-one"/><div className="gulgo-illustration-orbit orbit-two"/>
+    <div className="gulgo-illustration-frame">
+      <div className="gulgo-illustration-toolbar"><div className="gulgo-window-dots"><i/><i/><i/></div><span className="gulgo-toolbar-title">gulgo <em>/</em> ESPACE ENTREPRISE</span><span className="gulgo-toolbar-secure"><LockKeyhole size={9}/> SECURE</span></div>
+      <div className="gulgo-illustration-body">
+        <div className="gulgo-illustration-sidebar"><b/><i/><i/><i/><i/><i/><span/></div>
+        <div className="gulgo-illustration-canvas">
+          <div className="gulgo-illustration-title"><span className="gulgo-illustration-icon">{icons[variant]}</span><div><b>{titles[variant]}</b><small>ESPACE ENTREPRISE · gulgo</small></div><ArrowUpRight className="gulgo-mini-arrow" size={12}/></div>
+          <div className="gulgo-illustration-widgets"><span><b>17%</b><small>COMPLÉTUDE</small></span><span><b>01</b><small>DOSSIER</small></span><span><b>ACTIF</b><small>STATUT</small></span></div>
+          <div className="gulgo-illustration-detail"><div className="gulgo-illustration-chart"><i/><i/><i/><i/><i/><i/></div><div className="gulgo-illustration-lines"><span/><span/><span/><span/></div><div className="gulgo-illustration-check"><CheckCircle2 size={12}/><small>ESPACE CONTRÔLÉ</small></div></div>
         </div>
       </div>
-      <div className="tolbo-illustration-status"><LockKeyhole size={10}/><span>ENVIRONNEMENT SÉCURISÉ</span><b/><small>24/7</small></div>
+      <div className="gulgo-illustration-status"><LockKeyhole size={10}/><span>ENVIRONNEMENT SÉCURISÉ</span><b/><small>24/7</small></div>
     </div>
   </div>
 }

@@ -20,7 +20,7 @@ export default async function EvaluationDetail({
   const { id } = await params;
 
   return (
-    <div className="tolbo-client-page space-y-7">
+    <div className="gulgo-client-page space-y-7">
       {/* ============================================================
           EN-TÊTE DU DOSSIER
       ============================================================ */}

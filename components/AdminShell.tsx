@@ -108,7 +108,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
                 <div>
                   <div className="text-sm font-semibold">
-                    Back-office TOLBO
+                    Back-office gulgo
                   </div>
                   <div className="mt-0.5 text-xs text-white/60">
                     Environnement interne
@@ -182,7 +182,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold text-slate-800">
-                  TOLBO Staff
+                  gulgo Staff
                 </div>
 
                 <div className="truncate text-xs text-slate-500">
@@ -250,7 +250,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
                   <div className="hidden lg:block">
                     <div className="text-sm font-semibold text-slate-800">
-                      TOLBO Staff
+                      gulgo Staff
                     </div>
 
                     <div className="text-xs text-slate-500">

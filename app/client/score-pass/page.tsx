@@ -14,7 +14,7 @@ import {
 
 export default function Page() {
   return (
-    <main className="tolbo-client-page tolbo-score-pass-page">
+    <main className="gulgo-client-page gulgo-score-pass-page">
       <div className="container py-8 md:py-10">
 
         {/* ============================================================

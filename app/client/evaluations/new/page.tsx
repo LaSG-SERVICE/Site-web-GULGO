@@ -149,7 +149,7 @@ export default function NewEvaluation() {
   }
 
   return (
-    <div className="tolbo-client-page space-y-7">
+    <div className="gulgo-client-page space-y-7">
       {/* ============================================================
           HEADER
       ============================================================ */}

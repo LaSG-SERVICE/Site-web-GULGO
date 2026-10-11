@@ -1,6 +1,6 @@
-# TOLBO Web V1 — Starter complet
+# GULGO Web V1 — Starter complet
 
-Cette base rassemble l'architecture web, le multi-tenant, l'authentification Supabase, RLS, les logos TOLBO/client, l'espace client, la collecte des 37 variables, les documents/demandes/notifications, le back-office, le référentiel Score Pass V1 importé depuis Excel, le moteur de calcul autorisé par le référentiel, les hard gates, le versionnement, l'audit et les tests T01–T15.
+Cette base rassemble l'architecture web, le multi-tenant, l'authentification Supabase, RLS, les logos GULGO/client, l'espace client, la collecte des 37 variables, les documents/demandes/notifications, le back-office, le référentiel Score Pass V1 importé depuis Excel, le moteur de calcul autorisé par le référentiel, les hard gates, le versionnement, l'audit et les tests T01–T15.
 
 ## Démarrage
 ```bash
@@ -45,7 +45,7 @@ npm run audit
 - correction de l'avertissement Next.js lié à `scroll-behavior: smooth` avec `data-scroll-behavior="smooth"` ;
 - migration vers ESLint 10, la branche ESLint 9 étant arrivée en fin de vie le 6 août 2026 ;
 - navigation publique avec état actif et attribut `aria-current` ;
-- états 404, erreur et chargement cohérents avec la direction artistique TOLBO ;
+- états 404, erreur et chargement cohérents avec la direction artistique GULGO ;
 - amélioration de la hiérarchie visuelle, des surfaces, ombres, contrastes, états hover/focus et responsive ;
 - réduction des animations lorsque `prefers-reduced-motion` est actif ;
 - SEO, robots, sitemap et URL canonique conservés ;

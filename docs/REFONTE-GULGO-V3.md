@@ -1,8 +1,8 @@
-# TOLBO V3 — Brand-first professional web experience
+# gulgo V3 — Brand-first professional web experience
 
 ## Direction artistique
 
-- Logo officiel TOLBO utilisé comme source de vérité.
+- Logo officiel gulgo utilisé comme source de vérité.
 - Signature de marque : « LA CONFIANCE DEVIENT UN ACTIF. »
 - Bleu nuit / bleu institutionnel / orange signal.
 - Photographies éditoriales liées aux données, à l'entreprise et à la décision.

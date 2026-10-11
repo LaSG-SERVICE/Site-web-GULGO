@@ -1040,7 +1040,7 @@
     {
       "Niveau": "N4",
       "Libellé": "Vérifiée",
-      "Définition opérationnelle": "Information confirmée selon une procédure TOLBO ou par un tiers indépendant",
+      "Définition opérationnelle": "Information confirmée selon une procédure gulgo ou par un tiers indépendant",
       "Valeur IQP V1": 100,
       "Statut": "À calibrer",
       "Règle clé": "N4 ne signifie pas garantie absolument exacte",
@@ -1979,7 +1979,7 @@
       "Paramètre": "Délais de traitement contestation",
       "Niveau": "Gouvernance",
       "Décision attendue": "Fixer SLA opérationnel",
-      "Source de calibration": "Organisation TOLBO",
+      "Source de calibration": "Organisation gulgo",
       "Blocage production ?": "Non moteur calcul",
       "Statut": "À définir"
     }

@@ -42,7 +42,7 @@ export default function Notifications() {
   ).length;
 
   return (
-    <div className="tolbo-client-page tolbo-notifications-page space-y-8">
+    <div className="gulgo-client-page gulgo-notifications-page space-y-8">
       {/* ============================================================
           HEADER
       ============================================================ */}
@@ -70,7 +70,7 @@ export default function Notifications() {
 
             <p className="mt-3 max-w-xl text-sm leading-6 text-white/65 md:text-base">
               Retrouvez ici les demandes, changements de statut et messages
-              transmis par TOLBO concernant vos dossiers.
+              transmis par gulgo concernant vos dossiers.
             </p>
           </div>
 
@@ -188,7 +188,7 @@ export default function Notifications() {
               <InfoItem
                 icon={<MessageSquare className="h-4 w-4" />}
                 title="Messages"
-                description="Communications de TOLBO"
+                description="Communications de gulgo"
               />
             </div>
           </div>

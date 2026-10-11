@@ -229,7 +229,7 @@ export default function Company() {
 
   if (loading) {
     return (
-      <div className="tolbo-client-page space-y-6">
+      <div className="gulgo-client-page space-y-6">
         <div className="section-title">Mon entreprise</div>
 
         <div className="card flex min-h-[320px] items-center justify-center">
@@ -243,7 +243,7 @@ export default function Company() {
                 Chargement de votre entreprise
               </p>
               <p className="small muted mt-1">
-                Récupération des informations depuis votre espace TOLBO.
+                Récupération des informations depuis votre espace gulgo.
               </p>
             </div>
           </div>
@@ -288,7 +288,7 @@ export default function Company() {
   }
 
   return (
-    <div className="tolbo-client-page tolbo-company-page space-y-7">
+    <div className="gulgo-client-page gulgo-company-page space-y-7">
       {/* ============================================================
           HEADER
       ============================================================ */}
@@ -321,7 +321,7 @@ export default function Company() {
 
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
                   Gérez les informations utilisées pour identifier votre
-                  entreprise et construire votre profil au sein de TOLBO.
+                  entreprise et construire votre profil au sein de GULGO.
                 </p>
               </div>
             </div>
@@ -522,7 +522,7 @@ export default function Company() {
           {/* DATE DE RÉFÉRENCE */}
           <section className="card overflow-hidden">
             <div className="border-b border-slate-200 px-6 py-5 md:px-7"><div className="flex items-start gap-3"><div className="icon-box h-10 w-10 rounded-xl"><CalendarDays className="h-5 w-5" /></div><div><h2 className="font-semibold text-[var(--ink)]">Date de référence</h2><p className="mt-1 text-sm text-[var(--muted)]">Utilisez le calendrier pour saisir une date sans erreur de format.</p></div></div></div>
-            <div className="p-6 md:p-7"><label className="label">Date de création / début d’activité</label><div className="relative"><CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400" /><input className="field pl-10 tolbo-date-field" type="date" value={ent.establishment_date || ""} onChange={(e)=>updateField("establishment_date",e.target.value)} /></div></div>
+            <div className="p-6 md:p-7"><label className="label">Date de création / début d’activité</label><div className="relative"><CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400" /><input className="field pl-10 gulgo-date-field" type="date" value={ent.establishment_date || ""} onChange={(e)=>updateField("establishment_date",e.target.value)} /></div></div>
           </section>
 
           {/* PRÉSENCE DIGITALE */}
@@ -641,7 +641,7 @@ export default function Company() {
                   <p className="text-xs leading-5 text-[var(--muted)]">
                     Le logo de votre entreprise est utilisé uniquement pour
                     votre espace client et vos restitutions autorisées. Il
-                    reste distinct de l’identité officielle de TOLBO.
+                    reste distinct de l’identité officielle de gulgo.
                   </p>
                 </div>
               </div>
@@ -755,8 +755,8 @@ function SmartPlaceField({label, icon, value, onChange, kind, placeholder}:{labe
     []
   );
   useEffect(()=>{let cancelled=false; if((kind!=="country")&&value.trim().length>=3){const timer=setTimeout(async()=>{try{const q=encodeURIComponent(value.trim()); const url=kind==="postal"?`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&q=${q}`:`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&city=${q}`; const r=await fetch(url,{headers:{"Accept-Language":"fr"}}); const data=await r.json(); const vals=(data||[]).map((x:any)=>kind==="postal"?(x.address?.postcode?`${x.address.postcode} · ${x.address.city||x.address.town||x.address.village||x.display_name}`:x.display_name):(x.address?.city||x.address?.town||x.address?.village||x.name)).filter(Boolean); if(!cancelled)setSuggestions(Array.from(new Set(vals)).slice(0,6) as string[]);}catch{if(!cancelled)setSuggestions([])}},300); return()=>{cancelled=true;clearTimeout(timer)}}else setSuggestions([]); return()=>{}},[value,kind]);
-  const listId=`tolbo-${kind}-suggestions`; const filtered=kind==="country"&&value.length>=3?countries.filter((c: string)=>c.toLocaleLowerCase("fr").includes(value.toLocaleLowerCase("fr"))).slice(0,8):suggestions;
-  return <div><label className="label">{label}</label><div className="relative"><span className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-slate-400">{icon}</span><input className="field pl-10" list={listId} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} autoComplete="off"/><datalist id={listId}>{filtered.map((x: string)=><option key={x} value={x}/>)}</datalist></div>{value.length>=3&&<span className="tolbo-smart-hint">Suggestions activées · sélectionnez une proposition ou continuez votre saisie</span>}</div>
+  const listId=`gulgo-${kind}-suggestions`; const filtered=kind==="country"&&value.length>=3?countries.filter((c: string)=>c.toLocaleLowerCase("fr").includes(value.toLocaleLowerCase("fr"))).slice(0,8):suggestions;
+  return <div><label className="label">{label}</label><div className="relative"><span className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-slate-400">{icon}</span><input className="field pl-10" list={listId} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} autoComplete="off"/><datalist id={listId}>{filtered.map((x: string)=><option key={x} value={x}/>)}</datalist></div>{value.length>=3&&<span className="gulgo-smart-hint">Suggestions activées · sélectionnez une proposition ou continuez votre saisie</span>}</div>
 }
 
 function ProfileCheck({

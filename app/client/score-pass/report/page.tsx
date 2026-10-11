@@ -49,7 +49,7 @@ export default function Report() {
   const iqp = 79.25;
 
   return (
-    <main className="tolbo-client-page">
+    <main className="gulgo-client-page">
       <div className="container py-8 md:py-10">
 
         {/* ============================================================

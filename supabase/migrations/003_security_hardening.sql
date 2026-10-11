@@ -1,4 +1,4 @@
--- TOLBO — Security hardening
+-- gulgo — Security hardening
 -- Prevent users from self-joining an arbitrary organization.
 -- Organization creation + first CLIENT_ADMIN membership is now atomic.
 
@@ -50,6 +50,6 @@ create policy member_insert on public.organization_members
 for insert to authenticated
 with check (
   public.is_client_admin(organization_id)
-  or public.is_tolbo_staff()
+  or public.is_gulgo_staff()
 );
 drop policy if exists org_insert on public.organizations;

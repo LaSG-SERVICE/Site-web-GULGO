@@ -41,7 +41,7 @@ export default function Page() {
   ).length;
 
   return (
-    <div className="tolbo-client-page tolbo-requests-page space-y-8">
+    <div className="gulgo-client-page gulgo-requests-page space-y-8">
       {/* ============================================================
           HEADER
       ============================================================ */}
@@ -56,7 +56,7 @@ export default function Page() {
             </div>
 
             <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-              Demandes TOLBO
+              Demandes gulgo
             </h1>
 
             <p className="mt-3 max-w-xl text-sm leading-6 text-white/65 md:text-base">
@@ -294,7 +294,7 @@ export default function Page() {
               <ProcessStep
                 number="03"
                 title="Transmettre"
-                description="Envoyez votre réponse à TOLBO."
+                description="Envoyez votre réponse à gulgo."
               />
             </div>
           </div>

@@ -1,13 +1,13 @@
-# TOLBO V3 — direction artistique et intégration
+# gulgo V3 — direction artistique et intégration
 
 ## Positionnement
-TOLBO est présenté comme une plateforme B2B de crédibilité économique : données structurées, preuves traçables, contrôles, analyse et Score Pass.
+gulgo est présenté comme une plateforme B2B de crédibilité économique : données structurées, preuves traçables, contrôles, analyse et Score Pass.
 
 ## Identité
 - Bleu nuit : confiance, rigueur, institutionnel.
 - Orange : action, signal, validation.
 - Blanc : lisibilité et respiration.
-- Logo officiel TOLBO conservé sans modification.
+- Logo officiel gulgo conservé sans modification.
 - Signature : « LA CONFIANCE DEVIENT UN ACTIF. »
 
 ## Homepage
@@ -18,7 +18,7 @@ La page d'accueil suit une narration :
 4. Architecture de la donnée
 5. Score Pass
 6. Méthode
-7. Publics TOLBO
+7. Publics gulgo
 8. Data & Insights
 9. CTA final
 10. Footer
@@ -31,7 +31,7 @@ La page d'accueil suit une narration :
 - Navigation mobile native et responsive.
 
 ## Illustration
-La maquette de référence est `TOLBO-V3-illustration-professionnelle.png`.
+La maquette de référence est `gulgo-V3-illustration-professionnelle.png`.
 Elle sert de référence visuelle ; les données affichées dans les mockups sont illustratives.
 
 ## Lancement local

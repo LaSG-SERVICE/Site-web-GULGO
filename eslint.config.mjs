@@ -5,7 +5,7 @@ export default defineConfig([
   ...nextVitals,
   {
     rules: {
-      // Le contenu éditorial de TOLBO est principalement en français et
+      // Le contenu éditorial de GULGO est principalement en français et
       // contient volontairement des apostrophes dans les textes JSX.
       "react/no-unescaped-entities": "off",
     },

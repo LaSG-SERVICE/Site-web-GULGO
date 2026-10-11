@@ -1,9 +1,9 @@
 # ============================================================
-# TOLBO - GENERATEUR DU THEME GRAPHIQUE
+# gulgo - GENERATEUR DU THEME GRAPHIQUE
 # ============================================================
 #
 # Ce script génère automatiquement les variables CSS
-# utilisées par l'application web TOLBO.
+# utilisées par l'application web gulgo.
 #
 # Technologie frontend :
 #   Next.js + TypeScript + Tailwind CSS
@@ -12,7 +12,7 @@
 #   R
 #
 # Sortie :
-#   app/tolbo-theme.css
+#   app/gulgo-theme.css
 #
 # ============================================================
 
@@ -22,14 +22,14 @@
 
 output_file <- file.path(
   "app",
-  "tolbo-theme.css"
+  "gulgo-theme.css"
 )
 
 # ------------------------------------------------------------
-# 2. IDENTITE VISUELLE TOLBO
+# 2. IDENTITE VISUELLE gulgo
 # ------------------------------------------------------------
 
-tolbo <- list(
+gulgo <- list(
 
   # Couleurs principales
   navy        = "#0B1F3A",
@@ -92,59 +92,59 @@ css <- sprintf(
 ":root {
 
   /* ========================================================
-     TOLBO COLORS
+     gulgo COLORS
      ======================================================== */
 
-  --tolbo-navy: %s;
-  --tolbo-navy-dark: %s;
+  --gulgo-navy: %s;
+  --gulgo-navy-dark: %s;
 
-  --tolbo-blue: %s;
-  --tolbo-blue-dark: %s;
-  --tolbo-blue-light: %s;
+  --gulgo-blue: %s;
+  --gulgo-blue-dark: %s;
+  --gulgo-blue-light: %s;
 
-  --tolbo-cyan: %s;
-  --tolbo-violet: %s;
+  --gulgo-cyan: %s;
+  --gulgo-violet: %s;
 
-  --tolbo-white: %s;
-  --tolbo-background: %s;
-  --tolbo-surface: %s;
+  --gulgo-white: %s;
+  --gulgo-background: %s;
+  --gulgo-surface: %s;
 
-  --tolbo-text: %s;
-  --tolbo-text-muted: %s;
-  --tolbo-border: %s;
+  --gulgo-text: %s;
+  --gulgo-text-muted: %s;
+  --gulgo-border: %s;
 
   /* ========================================================
      STATUS
      ======================================================== */
 
-  --tolbo-success: %s;
-  --tolbo-success-bg: %s;
+  --gulgo-success: %s;
+  --gulgo-success-bg: %s;
 
-  --tolbo-warning: %s;
-  --tolbo-warning-bg: %s;
+  --gulgo-warning: %s;
+  --gulgo-warning-bg: %s;
 
-  --tolbo-danger: %s;
-  --tolbo-danger-bg: %s;
+  --gulgo-danger: %s;
+  --gulgo-danger-bg: %s;
 
-  --tolbo-info: %s;
-  --tolbo-info-bg: %s;
+  --gulgo-info: %s;
+  --gulgo-info-bg: %s;
 
   /* ========================================================
      DESIGN SYSTEM
      ======================================================== */
 
-  --tolbo-radius-sm: %s;
-  --tolbo-radius-md: %s;
-  --tolbo-radius-lg: %s;
-  --tolbo-radius-xl: %s;
+  --gulgo-radius-sm: %s;
+  --gulgo-radius-md: %s;
+  --gulgo-radius-lg: %s;
+  --gulgo-radius-xl: %s;
 
-  --tolbo-shadow-sm: %s;
-  --tolbo-shadow-md: %s;
-  --tolbo-shadow-lg: %s;
+  --gulgo-shadow-sm: %s;
+  --gulgo-shadow-md: %s;
+  --gulgo-shadow-lg: %s;
 
-  --tolbo-max-width: %s;
+  --gulgo-max-width: %s;
 
-  --tolbo-transition: %s;
+  --gulgo-transition: %s;
 }
 
 /* ==========================================================
@@ -157,8 +157,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--tolbo-background);
-  color: var(--tolbo-text);
+  background: var(--gulgo-background);
+  color: var(--gulgo-text);
 
   font-family:
     Inter,
@@ -185,10 +185,10 @@ a {
    CONTAINER
    ========================================================== */
 
-.tolbo-container {
+.gulgo-container {
   width: min(
     calc(100%% - 48px),
-    var(--tolbo-max-width)
+    var(--gulgo-max-width)
   );
 
   margin-inline: auto;
@@ -198,7 +198,7 @@ a {
    BUTTONS
    ========================================================== */
 
-.tolbo-button {
+.gulgo-button {
   display: inline-flex;
 
   align-items: center;
@@ -212,7 +212,7 @@ a {
     0 22px;
 
   border-radius:
-    var(--tolbo-radius-md);
+    var(--gulgo-radius-md);
 
   font-weight: 700;
 
@@ -221,20 +221,20 @@ a {
   cursor: pointer;
 
   transition:
-    var(--tolbo-transition);
+    var(--gulgo-transition);
 }
 
-.tolbo-button-primary {
-  color: var(--tolbo-white);
-  background: var(--tolbo-blue);
+.gulgo-button-primary {
+  color: var(--gulgo-white);
+  background: var(--gulgo-blue);
 
   box-shadow:
     0 8px 18px
     rgba(22, 93, 255, 0.20);
 }
 
-.tolbo-button-primary:hover {
-  background: var(--tolbo-blue-dark);
+.gulgo-button-primary:hover {
+  background: var(--gulgo-blue-dark);
 
   transform:
     translateY(-1px);
@@ -244,60 +244,60 @@ a {
     rgba(22, 93, 255, 0.25);
 }
 
-.tolbo-button-secondary {
-  color: var(--tolbo-navy);
+.gulgo-button-secondary {
+  color: var(--gulgo-navy);
 
   background:
-    var(--tolbo-white);
+    var(--gulgo-white);
 
   border-color:
-    var(--tolbo-border);
+    var(--gulgo-border);
 }
 
-.tolbo-button-secondary:hover {
+.gulgo-button-secondary:hover {
   border-color:
-    var(--tolbo-blue);
+    var(--gulgo-blue);
 
   color:
-    var(--tolbo-blue);
+    var(--gulgo-blue);
 }
 
 /* ==========================================================
    CARD
    ========================================================== */
 
-.tolbo-card {
+.gulgo-card {
 
   background:
-    var(--tolbo-surface);
+    var(--gulgo-surface);
 
   border:
-    1px solid var(--tolbo-border);
+    1px solid var(--gulgo-border);
 
   border-radius:
-    var(--tolbo-radius-lg);
+    var(--gulgo-radius-lg);
 
   box-shadow:
-    var(--tolbo-shadow-sm);
+    var(--gulgo-shadow-sm);
 
   transition:
-    var(--tolbo-transition);
+    var(--gulgo-transition);
 }
 
-.tolbo-card:hover {
+.gulgo-card:hover {
 
   transform:
     translateY(-3px);
 
   box-shadow:
-    var(--tolbo-shadow-md);
+    var(--gulgo-shadow-md);
 }
 
 /* ==========================================================
    BADGE
    ========================================================== */
 
-.tolbo-badge {
+.gulgo-badge {
 
   display: inline-flex;
 
@@ -318,17 +318,17 @@ a {
     700;
 
   background:
-    var(--tolbo-blue-light);
+    var(--gulgo-blue-light);
 
   color:
-    var(--tolbo-blue);
+    var(--gulgo-blue);
 }
 
 /* ==========================================================
    HERO
    ========================================================== */
 
-.tolbo-hero {
+.gulgo-hero {
 
   position:
     relative;
@@ -339,19 +339,19 @@ a {
   background:
     linear-gradient(
       135deg,
-      var(--tolbo-navy) 0%%,
+      var(--gulgo-navy) 0%%,
       #102F57 55%%,
       #163E72 100%%
     );
 
   color:
-    var(--tolbo-white);
+    var(--gulgo-white);
 
   border-radius:
     0 0 32px 32px;
 }
 
-.tolbo-hero::before {
+.gulgo-hero::before {
 
   content:
     \"\";
@@ -382,7 +382,7 @@ a {
    SCORE CARD
    ========================================================== */
 
-.tolbo-score-card {
+.gulgo-score-card {
 
   background:
     rgba(255,255,255,0.10);
@@ -394,10 +394,10 @@ a {
     blur(16px);
 
   border-radius:
-    var(--tolbo-radius-xl);
+    var(--gulgo-radius-xl);
 
   box-shadow:
-    var(--tolbo-shadow-lg);
+    var(--gulgo-shadow-lg);
 }
 
 /* ==========================================================
@@ -406,16 +406,16 @@ a {
 
 @media (max-width: 768px) {
 
-  .tolbo-container {
+  .gulgo-container {
 
     width:
       min(
         calc(100%% - 32px),
-        var(--tolbo-max-width)
+        var(--gulgo-max-width)
       );
   }
 
-  .tolbo-hero {
+  .gulgo-hero {
 
     border-radius:
       0 0 24px 24px;
@@ -423,27 +423,27 @@ a {
 
 }
 ",
-tolbo$navy,
-tolbo$navy_dark,
-tolbo$blue,
-tolbo$blue_dark,
-tolbo$blue_light,
-tolbo$cyan,
-tolbo$violet,
-tolbo$white,
-tolbo$background,
-tolbo$surface,
-tolbo$text,
-tolbo$text_muted,
-tolbo$border,
-tolbo$success,
-tolbo$success_bg,
-tolbo$warning,
-tolbo$warning_bg,
-tolbo$danger,
-tolbo$danger_bg,
-tolbo$info,
-tolbo$info_bg,
+gulgo$navy,
+gulgo$navy_dark,
+gulgo$blue,
+gulgo$blue_dark,
+gulgo$blue_light,
+gulgo$cyan,
+gulgo$violet,
+gulgo$white,
+gulgo$background,
+gulgo$surface,
+gulgo$text,
+gulgo$text_muted,
+gulgo$border,
+gulgo$success,
+gulgo$success_bg,
+gulgo$warning,
+gulgo$warning_bg,
+gulgo$danger,
+gulgo$danger_bg,
+gulgo$info,
+gulgo$info_bg,
 tokens$radius_sm,
 tokens$radius_md,
 tokens$radius_lg,
@@ -475,14 +475,14 @@ writeLines(
 
 cat("\n")
 cat("============================================\n")
-cat(" TOLBO DESIGN SYSTEM\n")
+cat(" gulgo DESIGN SYSTEM\n")
 cat("============================================\n")
 cat("\n")
 cat("Theme CSS genere avec succes.\n")
 cat("\n")
 cat("Fichier :", output_file, "\n")
 cat("\n")
-cat("Couleur principale :", tolbo$blue, "\n")
-cat("Couleur institutionnelle :", tolbo$navy, "\n")
+cat("Couleur principale :", gulgo$blue, "\n")
+cat("Couleur institutionnelle :", gulgo$navy, "\n")
 cat("\n")
 cat("============================================\n")

@@ -36,7 +36,7 @@ export default function Evaluations() {
   ).length;
 
   return (
-    <div className="tolbo-client-page tolbo-evaluations-page space-y-8">
+    <div className="gulgo-client-page gulgo-evaluations-page space-y-8">
       {/* ============================================================
           HEADER
       ============================================================ */}

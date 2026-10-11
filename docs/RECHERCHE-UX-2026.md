@@ -1,4 +1,4 @@
-# TOLBO — recherche UX/UI et architecture 2026
+# gulgo — recherche UX/UI et architecture 2026
 
 Cette refonte s'appuie sur une comparaison de plusieurs références publiques récentes :
 
@@ -11,10 +11,10 @@ Cette refonte s'appuie sur une comparaison de plusieurs références publiques r
 - **shadcndashboard / next-shadcn-dashboard** — architecture de composants réutilisables, responsive, tableaux, graphiques et écrans d'authentification.
 - **SaaS landing page open source avec Framer Motion** — inspiration pour les micro-interactions, les animations d'entrée et les transitions douces.
 
-## Décisions prises pour TOLBO
+## Décisions prises pour gulgo
 
 ### 1. Positionnement visuel
-TOLBO doit se situer entre le site institutionnel et la plateforme SaaS B2B :
+gulgo doit se situer entre le site institutionnel et la plateforme SaaS B2B :
 
 - bleu profond comme couleur de confiance ;
 - orange comme couleur d'action et de signal ;
@@ -39,7 +39,7 @@ Le nouveau bloc « La donnée en mouvement » ajoute :
 - animation de flottement ;
 - respect de `prefers-reduced-motion`.
 
-Les visuels photographiques sont actuellement appelés depuis des URLs externes pour le prototype. Pour la production, les remplacer par des images dont TOLBO possède les droits et les servir localement via `next/image`.
+Les visuels photographiques sont actuellement appelés depuis des URLs externes pour le prototype. Pour la production, les remplacer par des images dont gulgo possède les droits et les servir localement via `next/image`.
 
 ### 4. Dashboard
 La direction recommandée pour les espaces client/admin est :
@@ -77,4 +77,4 @@ lib/
   scorepass/
 ```
 
-Cette évolution rapprochera TOLBO des architectures feature-based utilisées par les starters SaaS modernes, sans réécrire inutilement le moteur métier existant.
+Cette évolution rapprochera gulgo des architectures feature-based utilisées par les starters SaaS modernes, sans réécrire inutilement le moteur métier existant.

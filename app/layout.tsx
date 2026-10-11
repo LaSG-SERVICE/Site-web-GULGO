@@ -3,18 +3,18 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 /* ============================================================
-   TOLBO — IDENTITÉ ÉDITORIALE & SEO
+   GULGO — IDENTITÉ ÉDITORIALE & SEO
    ============================================================ */
 
-const siteName = "TOLBO";
+const siteName = "GULGO";
 
 const siteTitle =
-  "TOLBO — Donner de la crédibilité aux données de votre entreprise";
+  "GULGO — Donner de la crédibilité aux données de votre entreprise";
 
 const siteDescription =
-  "TOLBO transforme les données d'entreprise en information structurée, vérifiable et exploitable. Collecte, contrôle, analyse et restitution au sein d'un environnement professionnel.";
+  "GULGO transforme les données d'entreprise en information structurée, vérifiable et exploitable. Collecte, contrôle, analyse et restitution au sein d'un environnement professionnel.";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolbo.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://gulgo.com";
 
 
 /* ============================================================
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   generator: "Next.js",
 
   keywords: [
-    "TOLBO",
+    "GULGO",
     "Score Pass",
     "crédibilité économique",
     "données d'entreprise",
@@ -51,13 +51,13 @@ export const metadata: Metadata = {
 
   authors: [
     {
-      name: "TOLBO",
+      name: "GULGO",
       url: siteUrl,
     },
   ],
 
-  creator: "TOLBO",
-  publisher: "TOLBO",
+  creator: "GULGO",
+  publisher: "GULGO",
 
   category: "business",
 
@@ -99,13 +99,13 @@ export const metadata: Metadata = {
 
     images: [
       {
-        url: "/branding/tolbo-logo.png",
+        url: "/branding/gulgo-logo.png",
 
         width: 1200,
         height: 630,
 
         alt:
-          "TOLBO — Donner de la crédibilité aux données de votre entreprise",
+          "GULGO — Donner de la crédibilité aux données de votre entreprise",
 
         type: "image/png",
       },
@@ -124,7 +124,7 @@ export const metadata: Metadata = {
     description:
       "Collecter, vérifier, structurer et valoriser les données de votre entreprise.",
 
-    images: ["/branding/tolbo-logo.png"],
+    images: ["/branding/gulgo-logo.png"],
   },
 
   /* ==========================================================
@@ -134,21 +134,21 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/branding/tolbo-logo.png",
+        url: "/branding/gulgo-logo.png",
         type: "image/png",
       },
     ],
 
     shortcut: [
       {
-        url: "/branding/tolbo-logo.png",
+        url: "/branding/gulgo-logo.png",
         type: "image/png",
       },
     ],
 
     apple: [
       {
-        url: "/branding/tolbo-logo.png",
+        url: "/branding/gulgo-logo.png",
       },
     ],
   },

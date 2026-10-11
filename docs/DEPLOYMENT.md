@@ -1,4 +1,4 @@
-# Déploiement TOLBO
+# Déploiement gulgo
 
 ## DEV
 1. Créer un projet Supabase DEV.
@@ -11,7 +11,7 @@
 Créer un projet Supabase distinct. Ne jamais partager les secrets DEV/PROD. Configurer les mêmes migrations et vérifier les policies RLS avant ouverture.
 
 ## Vercel
-Connecter le dépôt GitHub privé à Vercel, renseigner les variables d'environnement, lancer le build puis rattacher le domaine TOLBO.
+Connecter le dépôt GitHub privé à Vercel, renseigner les variables d'environnement, lancer le build puis rattacher le domaine gulgo.
 
 ## Contrôles pré-production
 - `npm run typecheck`

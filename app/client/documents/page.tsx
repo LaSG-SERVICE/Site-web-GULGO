@@ -275,7 +275,7 @@ export default function Documents() {
   }
 
   return (
-    <div className="tolbo-client-page tolbo-documents-page space-y-7">
+    <div className="gulgo-client-page gulgo-documents-page space-y-7">
       {/* ============================================================
           HEADER
       ============================================================ */}
@@ -294,7 +294,7 @@ export default function Documents() {
 
             <p className="muted mt-2 max-w-2xl">
               Déposez et consultez les pièces justificatives liées à votre
-              entreprise et à vos évaluations TOLBO.
+              entreprise et à vos évaluations gulgo.
             </p>
           </div>
 

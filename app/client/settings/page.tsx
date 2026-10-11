@@ -12,7 +12,7 @@ import {
 
 export default function Settings() {
   return (
-    <main className="tolbo-client-page tolbo-settings-page">
+    <main className="gulgo-client-page gulgo-settings-page">
       <div className="container py-8 md:py-10">
 
         {/* ============================================================
@@ -34,7 +34,7 @@ export default function Settings() {
 
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65 md:text-base">
                 Gérez vos préférences de compte, vos notifications et les
-                paramètres liés à la sécurité de votre espace TOLBO.
+                paramètres liés à la sécurité de votre espace gulgo.
               </p>
             </div>
 
@@ -70,7 +70,7 @@ export default function Settings() {
             </h2>
 
             <p className="mt-1 text-sm text-[var(--muted)]">
-              Gérez les paramètres associés à votre accès TOLBO.
+              Gérez les paramètres associés à votre accès gulgo.
             </p>
           </div>
 
@@ -84,7 +84,7 @@ export default function Settings() {
             <SettingRow
               icon={<Mail className="h-5 w-5" />}
               title="Adresse e-mail"
-              description="Adresse utilisée pour l'authentification et les communications TOLBO."
+              description="Adresse utilisée pour l'authentification et les communications gulgo."
             />
 
             <SettingRow
@@ -155,7 +155,7 @@ export default function Settings() {
 
             <p className="mt-1 text-sm text-[var(--muted)]">
               Les paramètres de sécurité sont gérés dans le cadre du système
-              d'authentification TOLBO.
+              d'authentification gulgo.
             </p>
           </div>
 

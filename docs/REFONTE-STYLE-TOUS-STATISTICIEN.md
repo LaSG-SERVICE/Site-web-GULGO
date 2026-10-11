@@ -1,8 +1,8 @@
-# Refonte graphique TOLBO
+# Refonte graphique gulgo
 
 ## Direction artistique
 
-La refonte applique à TOLBO une identité visuelle inspirée de l'approche éditoriale de TOUS STATISTICIEN :
+La refonte applique à gulgo une identité visuelle inspirée de l'approche éditoriale de TOUS STATISTICIEN :
 
 - bleu institutionnel pour la confiance et la donnée ;
 - orange comme couleur d'accent et d'appel à l'action ;
@@ -15,7 +15,7 @@ La refonte applique à TOLBO une identité visuelle inspirée de l'approche édi
 ## Fichiers principaux modifiés
 
 - `app/globals.css` : nouveau design system global, responsive et composants partagés.
-- `components/Brand.tsx` : identité TOLBO harmonisée.
+- `components/Brand.tsx` : identité gulgo harmonisée.
 - `app/layout.tsx` : métadonnées et icônes ramenées vers les assets réellement présents.
 - `app/client/page.tsx` : correction de typage Supabase.
 - `eslint.config.mjs` : règle éditoriale française adaptée.

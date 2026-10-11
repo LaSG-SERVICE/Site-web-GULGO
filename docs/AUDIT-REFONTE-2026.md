@@ -1,7 +1,7 @@
-# TOLBO — audit UX/UI, architecture et sécurité — 2026
+# gulgo — audit UX/UI, architecture et sécurité — 2026
 
 ## Périmètre
-Refonte professionnelle du dépôt TOLBO fourni dans `dev1-TOLBO.rar`.
+Refonte professionnelle du dépôt gulgo fourni dans `dev1-gulgo.rar`.
 
 ## Références publiques consultées
 La refonte a été confrontée aux patterns actuels de plusieurs projets open source et documentations :
@@ -65,4 +65,4 @@ Avant mise en ligne :
 2. installer proprement les dépendances avec `npm ci` ;
 3. exécuter `npm run typecheck`, `npm run lint`, `npm run test` et `npm run build` dans CI ;
 4. vérifier les politiques RLS sur un projet Supabase de staging ;
-5. remplacer les éventuelles images externes du prototype par des assets locaux dont TOLBO possède les droits.
+5. remplacer les éventuelles images externes du prototype par des assets locaux dont gulgo possède les droits.

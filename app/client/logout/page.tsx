@@ -23,10 +23,10 @@ export default function LogoutPage() {
   }
 
   return (
-    <main className="tolbo-client-page tolbo-logout-page">
-      <section className="tolbo-logout-shell">
+    <main className="gulgo-client-page gulgo-logout-page">
+      <section className="gulgo-logout-shell">
         <div className="relative z-10">
-          <div className="tolbo-logout-icon">
+          <div className="gulgo-logout-icon">
             <LogOut className="h-7 w-7" />
           </div>
 
@@ -37,30 +37,30 @@ export default function LogoutPage() {
 
           <h1>Déconnexion de votre espace entreprise</h1>
           <p>
-            Vous êtes sur le point de quitter votre espace TOLBO. Votre session
+            Vous êtes sur le point de quitter votre espace gulgo. Votre session
             sera fermée de manière sécurisée et vous pourrez vous reconnecter
             ultérieurement pour poursuivre la gestion de votre dossier.
           </p>
 
-          <div className="tolbo-logout-actions">
+          <div className="gulgo-logout-actions">
             <button
               type="button"
               onClick={signOut}
               disabled={loading}
-              className="tolbo-logout-primary"
+              className="gulgo-logout-primary"
             >
               <LogOut className="h-4 w-4" />
               {loading ? "Déconnexion…" : "Confirmer la déconnexion"}
             </button>
 
-            <Link href="/client" className="tolbo-logout-secondary">
+            <Link href="/client" className="gulgo-logout-secondary">
               Rester dans mon espace
             </Link>
           </div>
 
-          <div className="tolbo-logout-meta">
+          <div className="gulgo-logout-meta">
             <CheckCircle2 className="h-4 w-4" />
-            <span>Session et accès protégés par l’authentification TOLBO.</span>
+            <span>Session et accès protégés par l’authentification gulgo.</span>
           </div>
         </div>
       </section>

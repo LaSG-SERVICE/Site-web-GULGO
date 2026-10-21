@@ -10,7 +10,7 @@ export function GulgoLogo({ href = "/", compact = false, light = false }: Props)
       <span className="gulgo-logo-orbit orbit-two" />
       <span className="gulgo-logo-shine" />
       <Image
-        src="/branding/gulgo-logo-cropped.png"
+        src="/branding/gulgo-logo-cropped.jpeg"
         alt="GULGO — La confiance devient un actif."
         width={720}
         height={252}

@@ -99,7 +99,7 @@ export const metadata: Metadata = {
 
     images: [
       {
-        url: "/branding/gulgo-logo.png",
+        url: "/branding/gulgo-logo.jpeg",
 
         width: 1200,
         height: 630,
@@ -107,7 +107,7 @@ export const metadata: Metadata = {
         alt:
           "GULGO — Donner de la crédibilité aux données de votre entreprise",
 
-        type: "image/png",
+        type: "image/jpeg",
       },
     ],
   },
@@ -124,7 +124,7 @@ export const metadata: Metadata = {
     description:
       "Collecter, vérifier, structurer et valoriser les données de votre entreprise.",
 
-    images: ["/branding/gulgo-logo.png"],
+    images: ["/branding/gulgo-logo.jpeg"],
   },
 
   /* ==========================================================
@@ -134,21 +134,21 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/branding/gulgo-logo.png",
-        type: "image/png",
+        url: "/branding/gulgo-logo.jpeg",
+        type: "image/jpeg",
       },
     ],
 
     shortcut: [
       {
-        url: "/branding/gulgo-logo.png",
-        type: "image/png",
+        url: "/branding/gulgo-logo.jpeg",
+        type: "image/jpeg",
       },
     ],
 
     apple: [
       {
-        url: "/branding/gulgo-logo.png",
+        url: "/branding/gulgo-logo.jpeg",
       },
     ],
   },

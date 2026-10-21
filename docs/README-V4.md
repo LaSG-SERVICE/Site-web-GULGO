@@ -2,7 +2,7 @@
 
 Cette version répond aux cinq problèmes signalés :
 
-1. **Logo visible et animé** : le logo officiel est utilisé depuis `public/branding/gulgo-logo-cropped.png`. Il est présenté dans une plaque visuelle et dispose d'orbites discrètes et d'un léger mouvement continu. Les animations sont neutralisées avec `prefers-reduced-motion`.
+1. **Logo visible et animé** : le logo officiel est utilisé depuis `public/branding/gulgo-logo-cropped.jpeg`. Il est présenté dans une plaque visuelle et dispose d'orbites discrètes et d'un léger mouvement continu. Les animations sont neutralisées avec `prefers-reduced-motion`.
 2. **Navigation multi-pages** : l'accueil mène vers `/solutions`, `/score-pass`, `/methode`, `/entreprises`, `/a-propos`, `/actualites`, `/login` et `/register`. Les pages publiques partagent le même header/footer.
 3. **Connexion professionnelle** : `/login` dispose d'un écran en deux panneaux, visualisation Score Pass, preuves, indicateurs et formulaire fonctionnel Supabase.
 4. **Création de compte professionnelle** : `/register` reprend le même langage visuel et conserve la création Supabase.

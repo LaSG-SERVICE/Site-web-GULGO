@@ -1,3 +1,7 @@
+
+"use client";
+
+import { useEffect, useState } from "react";
 import { EnterpriseIllustration } from "@/components/EnterpriseIllustration";
 import Link from "next/link";
 import {
@@ -13,33 +17,209 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const evaluations = [
-  {
-    id: "SP-DEMO-001",
-    version: "V1.0",
-    status: "IN_PROGRESS",
-    statusLabel: "En cours",
-    statusClass: "bg-amber-50 text-amber-700 border border-amber-200",
-    score: "—",
-    period: "2026",
-    updated: "Mise à jour récente",
+import { createClient } from "@/lib/supabase/client";
+
+/* ================================================================
+   TYPES
+================================================================ */
+
+type EvaluationStatus =
+  | "DRAFT"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "SCORE_PRODUCED"
+  | "VALIDATED";
+
+type Evaluation = {
+  id: string;
+  enterprise_id: string;
+  observation_period: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string | null;
+  version: string;
+  status: EvaluationStatus;
+  score: number | null;
+};
+
+type StatusInfo = {
+  label: string;
+  className: string;
+};
+
+const statusConfig: Record<EvaluationStatus, StatusInfo> = {
+  DRAFT: {
+    label: "Brouillon",
+    className: "bg-slate-100 text-slate-700 border border-slate-200",
   },
-];
+  IN_PROGRESS: {
+    label: "En cours",
+    className: "bg-amber-50 text-amber-700 border border-amber-200",
+  },
+  COMPLETED: {
+    label: "Terminée",
+    className: "bg-blue-50 text-blue-700 border border-blue-200",
+  },
+  SCORE_PRODUCED: {
+    label: "Score produit",
+    className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  },
+  VALIDATED: {
+    label: "Validée",
+    className: "bg-green-50 text-green-700 border border-green-200",
+  },
+};
+
+/* ================================================================
+   PAGE PRINCIPALE
+================================================================ */
 
 export default function Evaluations() {
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  /* ==============================================================
+     RÉCUPÉRATION DES ÉVALUATIONS
+  ============================================================== */
+
+  useEffect(() => {
+    let active = true;
+
+    async function fetchEvaluations() {
+      try {
+        const sb = createClient();
+
+        // Vérification de la session
+        const {
+          data: { user },
+          error: authError,
+        } = await sb.auth.getUser();
+
+        if (authError) {
+          throw authError;
+        }
+
+        if (!user) {
+          throw new Error(
+            "Votre session a expiré. Veuillez vous reconnecter."
+          );
+        }
+
+        // Récupération des évaluations accessibles
+        // Les politiques RLS déterminent les lignes visibles.
+        const { data, error: queryError } = await sb
+          .from("evaluations")
+          .select(`
+            id,
+            enterprise_id,
+            observation_period,
+            created_by,
+            created_at,
+            updated_at,
+            version,
+            status,
+            score
+          `)
+          .order("created_at", { ascending: false });
+
+        if (queryError) {
+          throw queryError;
+        }
+
+        if (active) {
+          setEvaluations((data ?? []) as Evaluation[]);
+        }
+      } catch (err) {
+        console.error(
+          "Erreur de récupération des évaluations :",
+          err
+        );
+
+        if (active) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Une erreur est survenue lors de la récupération des évaluations."
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchEvaluations();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  /* ==============================================================
+     INDICATEURS
+  ============================================================== */
+
   const total = evaluations.length;
+
   const inProgress = evaluations.filter(
     (evaluation) => evaluation.status === "IN_PROGRESS"
   ).length;
-  const completed = evaluations.filter(
+
+  const scoreProduced = evaluations.filter(
     (evaluation) => evaluation.status === "SCORE_PRODUCED"
   ).length;
 
+  /* ==============================================================
+     AFFICHAGE DU CHARGEMENT
+  ============================================================== */
+
+  if (loading) {
+    return (
+      <div className="gulgo-client-page p-8">
+        Chargement de vos évaluations...
+      </div>
+    );
+  }
+
+  /* ==============================================================
+     AFFICHAGE DES ERREURS
+  ============================================================== */
+
+  if (error) {
+    return (
+      <div className="gulgo-client-page space-y-4 p-8">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+          <h2 className="font-semibold text-red-900">
+            Impossible de charger les évaluations
+          </h2>
+
+          <p className="mt-2 text-sm text-red-700">
+            {error}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="btn btn-secondary"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  }
+
+  /* ==============================================================
+     AFFICHAGE PRINCIPAL
+  ============================================================== */
+
   return (
     <div className="gulgo-client-page gulgo-evaluations-page space-y-8">
-      {/* ============================================================
-          HEADER
-      ============================================================ */}
+
+      {/* HEADER */}
+
       <section className="relative overflow-hidden rounded-3xl bg-[var(--navy)] px-6 py-8 text-white shadow-[0_20px_50px_rgba(8,27,51,0.14)] md:px-9 md:py-10">
         <div className="absolute inset-0 bg-grid opacity-10" />
 
@@ -73,9 +253,8 @@ export default function Evaluations() {
         </div>
       </section>
 
-      {/* ============================================================
-          KPI
-      ============================================================ */}
+      {/* KPI */}
+
       <section className="grid gap-4 md:grid-cols-3">
         <KpiCard
           icon={<FileText className="h-5 w-5" />}
@@ -94,16 +273,17 @@ export default function Evaluations() {
         <KpiCard
           icon={<CheckCircle2 className="h-5 w-5" />}
           label="Score produit"
-          value={String(completed)}
-          description="Évaluations finalisées"
+          value={String(scoreProduced)}
+          description="Scores effectivement calculés"
         />
       </section>
 
-      {/* ============================================================
-          INFORMATION
-      ============================================================ */}
+      {/* LISTE DES ÉVALUATIONS */}
+
       <section className="grid gap-5 lg:grid-cols-[1fr_340px]">
+
         {/* TABLE */}
+
         <div className="card overflow-hidden">
           <div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -122,7 +302,8 @@ export default function Evaluations() {
             </div>
           </div>
 
-          {/* Desktop */}
+          {/* DESKTOP */}
+
           <div className="hidden overflow-x-auto md:block">
             <table className="table w-full">
               <thead>
@@ -138,119 +319,149 @@ export default function Evaluations() {
               </thead>
 
               <tbody>
-                {evaluations.map((evaluation) => (
-                  <tr key={evaluation.id}>
-                    <td>
-                      <div>
-                        <div className="font-semibold text-[var(--ink)]">
-                          {evaluation.id}
-                        </div>
-
-                        <div className="mt-1 text-xs text-[var(--muted)]">
-                          Dossier Score Pass
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>
-                      <div className="inline-flex items-center gap-2 text-sm text-slate-600">
-                        <CalendarDays className="h-4 w-4 text-slate-400" />
-                        {evaluation.period}
-                      </div>
-                    </td>
-
-                    <td>
-                      <span className="text-sm font-medium text-slate-700">
-                        {evaluation.version}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${evaluation.statusClass}`}
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                        {evaluation.statusLabel}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="text-sm font-semibold text-slate-700">
-                        {evaluation.score}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="text-xs text-[var(--muted)]">
-                        {evaluation.updated}
-                      </span>
-                    </td>
-
-                    <td className="text-right">
-                      <Link
-                        href={`/client/evaluations/${evaluation.id}`}
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 transition hover:text-blue-800"
-                      >
-                        Ouvrir
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
+                {evaluations.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="py-10 text-center text-slate-500"
+                    >
+                      Aucune évaluation enregistrée pour le moment.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  evaluations.map((evaluation) => {
+                    const status = statusConfig[evaluation.status];
+
+                    const period =
+                      evaluation.observation_period ||
+                      new Date(evaluation.created_at)
+                        .getFullYear()
+                        .toString();
+
+                    const updated =
+                      evaluation.updated_at || evaluation.created_at;
+
+                    return (
+                      <tr key={evaluation.id}>
+                        <td>
+                          <div>
+                            <div className="font-semibold text-[var(--ink)]">
+                              SP-{evaluation.id.slice(0, 8).toUpperCase()}
+                            </div>
+
+                            <div className="mt-1 text-xs text-[var(--muted)]">
+                              Dossier Score Pass
+                            </div>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="inline-flex items-center gap-2 text-sm text-slate-600">
+                            <CalendarDays className="h-4 w-4 text-slate-400" />
+                            {period}
+                          </div>
+                        </td>
+
+                        <td>
+                          <span className="text-sm font-medium text-slate-700">
+                            {evaluation.version}
+                          </span>
+                        </td>
+
+                        <td>
+                          <StatusBadge status={status} />
+                        </td>
+
+                        <td>
+                          <span className="text-sm font-semibold text-slate-700">
+                            {formatScore(evaluation.score)}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="text-xs text-[var(--muted)]">
+                            {formatDate(updated)}
+                          </span>
+                        </td>
+
+                        <td className="text-right">
+                          <Link
+                            href={`/client/evaluations/${evaluation.id}`}
+                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 transition hover:text-blue-800"
+                          >
+                            Ouvrir
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
 
-          {/* Mobile */}
+          {/* MOBILE */}
+
           <div className="divide-y divide-slate-200 md:hidden">
-            {evaluations.map((evaluation) => (
-              <div key={evaluation.id} className="p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="font-semibold text-[var(--ink)]">
-                      {evaluation.id}
-                    </div>
-
-                    <div className="mt-1 text-xs text-[var(--muted)]">
-                      Dossier Score Pass · {evaluation.version}
-                    </div>
-                  </div>
-
-                  <span
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${evaluation.statusClass}`}
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                    {evaluation.statusLabel}
-                  </span>
-                </div>
-
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  <MobileInfo
-                    label="Période"
-                    value={evaluation.period}
-                  />
-
-                  <MobileInfo
-                    label="Score"
-                    value={evaluation.score}
-                  />
-                </div>
-
-                <Link
-                  href={`/client/evaluations/${evaluation.id}`}
-                  className="btn btn-secondary mt-5 flex w-full items-center justify-center gap-2"
-                >
-                  Ouvrir le dossier
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+            {evaluations.length === 0 ? (
+              <div className="p-5 text-center text-sm text-slate-500">
+                Aucune évaluation enregistrée pour le moment.
               </div>
-            ))}
+            ) : (
+              evaluations.map((evaluation) => {
+                const status = statusConfig[evaluation.status];
+
+                const period =
+                  evaluation.observation_period ||
+                  new Date(evaluation.created_at)
+                    .getFullYear()
+                    .toString();
+
+                return (
+                  <div key={evaluation.id} className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="font-semibold text-[var(--ink)]">
+                          SP-{evaluation.id.slice(0, 8).toUpperCase()}
+                        </div>
+
+                        <div className="mt-1 text-xs text-[var(--muted)]">
+                          Dossier Score Pass · {evaluation.version}
+                        </div>
+                      </div>
+
+                      <StatusBadge status={status} />
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+                      <MobileInfo
+                        label="Période"
+                        value={period}
+                      />
+
+                      <MobileInfo
+                        label="Score"
+                        value={formatScore(evaluation.score)}
+                      />
+                    </div>
+
+                    <Link
+                      href={`/client/evaluations/${evaluation.id}`}
+                      className="btn btn-secondary mt-5 flex w-full items-center justify-center gap-2"
+                    >
+                      Ouvrir le dossier
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* ============================================================
-            SIDEBAR
-        ============================================================ */}
+        {/* SIDEBAR */}
+
         <aside className="space-y-5">
           <div className="premium-card p-6">
             <div className="icon-box mb-5">
@@ -302,7 +513,44 @@ export default function Evaluations() {
 }
 
 /* ================================================================
-   COMPONENTS
+   UTILITAIRES D'AFFICHAGE
+================================================================ */
+
+function formatScore(score: number | null): string {
+  if (score === null) {
+    return "—";
+  }
+
+  return `${Number(score).toLocaleString("fr-FR")}/100`;
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleDateString("fr-FR");
+}
+
+/* ================================================================
+   BADGE DE STATUT
+================================================================ */
+
+function StatusBadge({ status }: { status: StatusInfo }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      {status.label}
+    </span>
+  );
+}
+
+/* ================================================================
+   COMPOSANTS
 ================================================================ */
 
 function KpiCard({

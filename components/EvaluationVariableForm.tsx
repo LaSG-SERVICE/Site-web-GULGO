@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -8,7 +9,6 @@ import {
   ClipboardCheck,
   Database,
   FileCheck2,
-  Info,
   Loader2,
   Save,
   ShieldCheck,
@@ -47,6 +47,12 @@ type VariableStatus =
   | "COLD_START"
   | "TEMP_UNAVAILABLE"
   | "REFUSED";
+
+type SavedVariable = {
+  variable_id: string;
+  value_text: string | null;
+  status: VariableStatus;
+};
 
 const STATUS_OPTIONS: {
   value: VariableStatus;
@@ -100,9 +106,15 @@ const STATUS_LABELS: Record<VariableStatus, string> = {
   REFUSED: "Refus",
 };
 
+const VALID_STATUSES = new Set<string>(
+  STATUS_OPTIONS.map((option) => option.value),
+);
+
 export function EvaluationVariableForm({
   evaluationId,
 }: EvaluationVariableFormProps) {
+  const sb = useMemo(() => createClient(), []);
+
   const variables = useMemo(
     () =>
       (config.variables as Variable[]).filter(
@@ -132,9 +144,85 @@ export function EvaluationVariableForm({
     ),
   );
 
+  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+
+  // =========================================================
+  // CHARGEMENT DES DONNEES DEJA ENREGISTREES
+  // =========================================================
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSavedVariables() {
+      setLoading(true);
+      setError("");
+      setMsg("");
+
+      try {
+        const { data, error: loadError } = await sb
+          .from("evaluation_variables")
+          .select("variable_id, value_text, status")
+          .eq("evaluation_id", evaluationId);
+
+        if (loadError) {
+          throw loadError;
+        }
+
+        if (cancelled) return;
+
+        const savedValues: Record<string, string> = {};
+        const savedStatuses: Record<string, VariableStatus> = {};
+
+        (data as SavedVariable[] | null)?.forEach((item) => {
+          if (
+            !variables.some(
+              (variable) => variable.Variable_ID === item.variable_id,
+            )
+          ) {
+            return;
+          }
+
+          if (item.value_text !== null) {
+            savedValues[item.variable_id] = item.value_text;
+          }
+
+          if (VALID_STATUSES.has(item.status)) {
+            savedStatuses[item.variable_id] = item.status;
+          }
+        });
+
+        setValues(savedValues);
+        setStatus(savedStatuses);
+      } catch (err) {
+        if (cancelled) return;
+
+        console.error("Erreur de chargement des variables :", err);
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Impossible de charger les variables de cette évaluation.",
+        );
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadSavedVariables();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sb, evaluationId, variables]);
+
+  // =========================================================
+  // REGROUPEMENT PAR DIMENSION
+  // =========================================================
 
   const grouped = useMemo(
     () =>
@@ -147,18 +235,27 @@ export function EvaluationVariableForm({
     [dimensions, variables],
   );
 
-  const filledCount = variables.filter(
-    (variable) =>
-      values[variable.Variable_ID] !== undefined &&
-      values[variable.Variable_ID].trim() !== "",
-  ).length;
+  // =========================================================
+  // PROGRESSION
+  // =========================================================
 
-  const statusCount = Object.keys(status).length;
+  const filledCount = variables.filter((variable) => {
+    const id = variable.Variable_ID;
+
+    return (
+      (values[id] !== undefined && values[id].trim() !== "") ||
+      (status[id] !== undefined && status[id] !== "EVALUABLE")
+    );
+  }).length;
 
   const completion =
     variables.length > 0
       ? Math.round((filledCount / variables.length) * 100)
       : 0;
+
+  // =========================================================
+  // ACTIONS
+  // =========================================================
 
   function toggleDimension(code: string) {
     setOpenDimensions((current) => ({
@@ -167,10 +264,7 @@ export function EvaluationVariableForm({
     }));
   }
 
-  function updateValue(
-    variableId: string,
-    value: string,
-  ) {
+  function updateValue(variableId: string, value: string) {
     setValues((current) => ({
       ...current,
       [variableId]: value,
@@ -193,33 +287,43 @@ export function EvaluationVariableForm({
     setError("");
   }
 
+  // =========================================================
+  // ENREGISTREMENT DANS SUPABASE
+  // =========================================================
+
   async function save() {
+    if (loading || busy) return;
+
     setBusy(true);
     setMsg("");
     setError("");
 
     try {
-      const sb = createClient();
-
       const payload = variables
-        .filter(
-          (variable) =>
-            values[variable.Variable_ID] !== undefined ||
-            status[variable.Variable_ID] !== undefined,
-        )
-        .map((variable) => ({
-          evaluation_id: evaluationId,
-          variable_id: variable.Variable_ID,
-          value_text:
-            values[variable.Variable_ID]?.trim() || null,
-          status:
-            status[variable.Variable_ID] || "EVALUABLE",
-        }));
+        .filter((variable) => {
+          const id = variable.Variable_ID;
 
-      if (!payload.length) {
-        setMsg(
-          "Aucune variable n’a encore été renseignée.",
-        );
+          return (
+            Object.prototype.hasOwnProperty.call(values, id) ||
+            Object.prototype.hasOwnProperty.call(status, id)
+          );
+        })
+        .map((variable) => {
+          const id = variable.Variable_ID;
+
+          return {
+            evaluation_id: evaluationId,
+            variable_id: id,
+            value_text:
+              values[id] !== undefined
+                ? values[id].trim() || null
+                : null,
+            status: status[id] || "EVALUABLE",
+          };
+        });
+
+      if (payload.length === 0) {
+        setMsg("Aucune modification à enregistrer.");
         return;
       }
 
@@ -230,29 +334,55 @@ export function EvaluationVariableForm({
         });
 
       if (saveError) {
-        setError(saveError.message);
-        return;
+        throw saveError;
       }
 
       setMsg(
         `${payload.length} variable${
           payload.length > 1 ? "s" : ""
-        } enregistrée${payload.length > 1 ? "s" : ""}.`,
+        } enregistrée${payload.length > 1 ? "s" : ""} avec succès.`,
       );
-    } catch {
+    } catch (err) {
+      console.error("Erreur d'enregistrement :", err);
+
       setError(
-        "Une erreur inattendue est survenue pendant l’enregistrement.",
+        err instanceof Error
+          ? err.message
+          : "Une erreur inattendue est survenue pendant l'enregistrement.",
       );
     } finally {
       setBusy(false);
     }
   }
 
+  // =========================================================
+  // AFFICHAGE PENDANT LE CHARGEMENT
+  // =========================================================
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <Loader2 size={30} className="animate-spin text-blue-600" />
+
+        <p className="mt-4 text-sm font-semibold text-slate-800">
+          Chargement des variables...
+        </p>
+
+        <p className="mt-1 text-xs text-slate-500">
+          Récupération des données déjà enregistrées.
+        </p>
+      </div>
+    );
+  }
+
+  // =========================================================
+  // INTERFACE PRINCIPALE
+  // =========================================================
+
   return (
     <div className="space-y-6">
-      {/* ========================================================
-          HEADER DE SAISIE
-      ======================================================== */}
+      {/* HEADER */}
+
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 bg-[var(--navy)] px-5 py-6 text-white sm:px-7">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -280,7 +410,6 @@ export function EvaluationVariableForm({
               </div>
             </div>
 
-            {/* Progression */}
             <div className="min-w-[190px] rounded-xl border border-white/10 bg-white/5 p-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-white/60">
@@ -300,18 +429,17 @@ export function EvaluationVariableForm({
               </div>
 
               <div className="mt-2 text-[11px] text-white/50">
-                {filledCount} / {variables.length} variables
-                renseignées
+                {filledCount} / {variables.length} variables renseignées
+                ou qualifiées
               </div>
             </div>
           </div>
         </div>
 
-        {/* Information méthodologique */}
         <div className="grid gap-4 px-5 py-5 sm:grid-cols-3 sm:px-7">
           <InfoItem
             icon={Database}
-            title="37 variables"
+            title={`${variables.length} variables`}
             text="Référentiel Score Pass V1"
           />
 
@@ -329,157 +457,131 @@ export function EvaluationVariableForm({
         </div>
       </section>
 
-      {/* ========================================================
-          ALERTES
-      ======================================================== */}
+      {/* ALERTES */}
+
       {error && (
         <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-700">
-          <AlertCircle
-            size={18}
-            className="mt-0.5 shrink-0"
-          />
+          <AlertCircle size={18} className="mt-0.5 shrink-0" />
 
           <div>
             <div className="font-semibold">
-              Enregistrement impossible
+              {error.includes("charg") || error.includes("fetch")
+                ? "Chargement impossible"
+                : "Opération impossible"}
             </div>
 
-            <div className="mt-0.5 text-red-600">
-              {error}
-            </div>
+            <div className="mt-0.5 text-red-600">{error}</div>
           </div>
         </div>
       )}
 
       {msg && !error && (
         <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-sm text-emerald-700">
-          <CheckCircle2
-            size={18}
-            className="mt-0.5 shrink-0"
-          />
+          <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
 
           <div>
             <div className="font-semibold">
               Enregistrement effectué
             </div>
 
-            <div className="mt-0.5 text-emerald-600">
-              {msg}
-            </div>
+            <div className="mt-0.5 text-emerald-600">{msg}</div>
           </div>
         </div>
       )}
 
-      {/* ========================================================
-          DIMENSIONS
-      ======================================================== */}
+      {/* DIMENSIONS */}
+
       <div className="space-y-4">
-        {grouped.map(
-          ({ dimension, variables: dimensionVariables }) => {
-            const isOpen =
-              openDimensions[dimension.Code] ?? true;
+        {grouped.map(({ dimension, variables: dimensionVariables }) => {
+          const isOpen = openDimensions[dimension.Code] ?? true;
 
-            const dimensionFilled =
-              dimensionVariables.filter(
-                (variable) =>
-                  values[variable.Variable_ID] !== undefined &&
-                  values[
-                    variable.Variable_ID
-                  ].trim() !== "",
-              ).length;
+          const dimensionFilled = dimensionVariables.filter(
+            (variable) => {
+              const id = variable.Variable_ID;
 
-            return (
-              <section
-                key={dimension.Code}
-                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+              return (
+                (values[id] !== undefined && values[id].trim() !== "") ||
+                (status[id] !== undefined && status[id] !== "EVALUABLE")
+              );
+            },
+          ).length;
+
+          return (
+            <section
+              key={dimension.Code}
+              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            >
+              <button
+                type="button"
+                onClick={() => toggleDimension(dimension.Code)}
+                className="group flex w-full items-center gap-4 px-5 py-5 text-left transition hover:bg-slate-50 sm:px-6"
               >
-                {/* Dimension header */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    toggleDimension(dimension.Code)
-                  }
-                  className="group flex w-full items-center gap-4 px-5 py-5 text-left transition hover:bg-slate-50 sm:px-6"
-                >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-sm font-extrabold text-blue-700">
-                    {dimension.Code}
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-sm font-extrabold text-blue-700">
+                  {dimension.Code}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-base font-bold text-slate-900 sm:text-lg">
+                      {dimension.Dimension}
+                    </h2>
+
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                      {dimensionVariables.length} variables
+                    </span>
                   </div>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-bold text-slate-900 sm:text-lg">
-                        {dimension.Dimension}
-                      </h2>
+                  {dimension["Objet général"] && (
+                    <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
+                      {dimension["Objet général"]}
+                    </p>
+                  )}
+                </div>
 
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                        {dimensionVariables.length}{" "}
-                        variables
-                      </span>
-                    </div>
-
-                    {dimension["Objet général"] && (
-                      <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
-                        {dimension["Objet général"]}
-                      </p>
-                    )}
+                <div className="hidden shrink-0 text-right sm:block">
+                  <div className="text-xs font-semibold text-slate-600">
+                    {dimensionFilled}/{dimensionVariables.length}
                   </div>
 
-                  <div className="hidden shrink-0 text-right sm:block">
-                    <div className="text-xs font-semibold text-slate-600">
-                      {dimensionFilled}/
-                      {dimensionVariables.length}
-                    </div>
-
-                    <div className="mt-1 text-[10px] text-slate-400">
-                      renseignées
-                    </div>
+                  <div className="mt-1 text-[10px] text-slate-400">
+                    renseignées ou qualifiées
                   </div>
+                </div>
 
-                  <ChevronDown
-                    size={19}
-                    className={[
-                      "shrink-0 text-slate-400 transition-transform duration-200",
-                      isOpen ? "rotate-180" : "",
-                    ].join(" ")}
-                  />
-                </button>
+                <ChevronDown
+                  size={19}
+                  className={[
+                    "shrink-0 text-slate-400 transition-transform duration-200",
+                    isOpen ? "rotate-180" : "",
+                  ].join(" ")}
+                />
+              </button>
 
-                {/* Variables */}
-                {isOpen && (
-                  <div className="border-t border-slate-200">
-                    <div className="divide-y divide-slate-100">
-                      {dimensionVariables.map(
-                        (variable) => (
-                          <VariableField
-                            key={variable.Variable_ID}
-                            variable={variable}
-                            value={
-                              values[
-                                variable.Variable_ID
-                              ] ?? ""
-                            }
-                            status={
-                              status[
-                                variable.Variable_ID
-                              ] ?? "EVALUABLE"
-                            }
-                            onValueChange={updateValue}
-                            onStatusChange={updateStatus}
-                          />
-                        ),
-                      )}
-                    </div>
+              {isOpen && (
+                <div className="border-t border-slate-200">
+                  <div className="divide-y divide-slate-100">
+                    {dimensionVariables.map((variable) => (
+                      <VariableField
+                        key={variable.Variable_ID}
+                        variable={variable}
+                        value={values[variable.Variable_ID] ?? ""}
+                        status={
+                          status[variable.Variable_ID] ?? "EVALUABLE"
+                        }
+                        onValueChange={updateValue}
+                        onStatusChange={updateStatus}
+                      />
+                    ))}
                   </div>
-                )}
-              </section>
-            );
-          },
-        )}
+                </div>
+              )}
+            </section>
+          );
+        })}
       </div>
 
-      {/* ========================================================
-          BARRE D'ENREGISTREMENT
-      ======================================================== */}
+      {/* BARRE D'ENREGISTREMENT */}
+
       <div className="sticky bottom-4 z-20">
         <div className="rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur sm:p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -490,13 +592,12 @@ export function EvaluationVariableForm({
 
               <div>
                 <div className="text-sm font-semibold text-slate-800">
-                  {filledCount} / {variables.length} variables
-                  renseignées
+                  {filledCount} / {variables.length} variables renseignées
+                  ou qualifiées
                 </div>
 
                 <div className="mt-0.5 text-xs text-slate-500">
-                  Vous pouvez enregistrer progressivement le
-                  dossier.
+                  Vous pouvez enregistrer progressivement le dossier.
                 </div>
               </div>
             </div>
@@ -504,15 +605,12 @@ export function EvaluationVariableForm({
             <button
               type="button"
               className="btn btn-primary inline-flex min-h-11 items-center justify-center gap-2 px-5"
-              disabled={busy}
+              disabled={busy || loading}
               onClick={save}
             >
               {busy ? (
                 <>
-                  <Loader2
-                    size={17}
-                    className="animate-spin"
-                  />
+                  <Loader2 size={17} className="animate-spin" />
                   Enregistrement…
                 </>
               ) : (
@@ -543,34 +641,28 @@ function VariableField({
   variable: Variable;
   value: string;
   status: VariableStatus;
-  onValueChange: (
-    variableId: string,
-    value: string,
-  ) => void;
+  onValueChange: (variableId: string, value: string) => void;
   onStatusChange: (
     variableId: string,
     status: VariableStatus,
   ) => void;
 }) {
   const statusInfo =
-    STATUS_OPTIONS.find(
-      (option) => option.value === status,
-    ) ?? STATUS_OPTIONS[0];
+    STATUS_OPTIONS.find((option) => option.value === status) ??
+    STATUS_OPTIONS[0];
 
   const isNonEvaluable = status !== "EVALUABLE";
 
   return (
     <div className="px-5 py-5 sm:px-6 sm:py-6">
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px] xl:gap-8">
-        {/* Informations variable */}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <label
               htmlFor={`variable-${variable.Variable_ID}`}
               className="text-sm font-bold text-slate-900"
             >
-              {variable["Nom variable"] ||
-                variable.Variable_ID}
+              {variable["Nom variable"] || variable.Variable_ID}
             </label>
 
             <span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-[10px] font-semibold text-slate-500">
@@ -590,9 +682,7 @@ function VariableField({
 
             <MetaItem
               label="Source privilégiée"
-              value={
-                variable["Source privilégiée"] || "—"
-              }
+              value={variable["Source privilégiée"] || "—"}
             />
 
             <MetaItem
@@ -602,7 +692,6 @@ function VariableField({
           </div>
         </div>
 
-        {/* Saisie */}
         <div className="grid gap-3">
           <div>
             <label
@@ -645,16 +734,12 @@ function VariableField({
               onChange={(event) =>
                 onStatusChange(
                   variable.Variable_ID,
-                  event.target
-                    .value as VariableStatus,
+                  event.target.value as VariableStatus,
                 )
               }
             >
               {STATUS_OPTIONS.map((option) => (
-                <option
-                  key={option.value}
-                  value={option.value}
-                >
+                <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}

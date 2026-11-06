@@ -1,4 +1,10 @@
+
 import type { ReactNode } from "react";
-import { ClientShell } from "@/components/ClientShell";
-import "./client.css";
-export default function ClientLayout({children}:{children:ReactNode}){return <ClientShell>{children}</ClientShell>}
+
+export default function ClientLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return <>{children}</>;
+}

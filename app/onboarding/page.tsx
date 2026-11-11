@@ -4,180 +4,284 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Brand } from "@/components/Brand";
 import { LogoUploader } from "@/components/LogoUploader";
 
 export default function Onboarding() {
+  const router = useRouter();
+
   const [company, setCompany] = useState("");
   const [orgId, setOrgId] = useState("");
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-
-  const router = useRouter();
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    (async () => {
+    let active = true;
+
+    async function initialize() {
+      try {
+        const sb = createClient();
+
+        const {
+          data: { user },
+        } = await sb.auth.getUser();
+
+        if (!active) return;
+
+        if (!user) {
+          router.replace("/login");
+          return;
+        }
+
+        const { data: membership, error: membershipError } = await sb
+          .from("organization_members")
+          .select("organization_id")
+          .eq("user_id", user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (!active) return;
+
+        if (membershipError) {
+          setError("Impossible de vérifier votre organisation.");
+          setChecking(false);
+          return;
+        }
+
+        if (membership?.organization_id) {
+          router.replace("/client");
+          return;
+        }
+
+        setCompany(
+          (user.user_metadata?.company_name as string) || ""
+        );
+
+        setChecking(false);
+      } catch {
+        if (active) {
+          setError("Une erreur est survenue. Veuillez réessayer.");
+          setChecking(false);
+        }
+      }
+    }
+
+    initialize();
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
+  async function createOrg(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (!company.trim() || busy) return;
+
+    setBusy(true);
+    setError("");
+
+    try {
       const sb = createClient();
+
       const {
         data: { user },
       } = await sb.auth.getUser();
 
       if (!user) {
-        router.push("/login");
+        setError("Votre session a expiré. Veuillez vous reconnecter.");
+        setBusy(false);
         return;
       }
 
-      const { data: membership } = await sb
-        .from("organization_members")
-        .select("organization_id")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-
-      if (membership?.organization_id) {
-        router.push("/client");
-        return;
-      }
-
-      setCompany(
-        (user.user_metadata?.company_name as string) || ""
+      const { data: organizationId, error: rpcError } = await sb.rpc(
+        "create_organization_with_admin",
+        {
+          org_name: company.trim(),
+        }
       );
-    })();
-  }, [router]);
 
-  async function createOrg(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (!company.trim()) {
-      setError("Veuillez renseigner le nom de votre entreprise.");
-      return;
-    }
-
-    setBusy(true);
-    setError("");
-
-    const sb = createClient();
-
-    const {
-      data: { user },
-    } = await sb.auth.getUser();
-
-    if (!user) {
-      setError("Votre session a expiré. Veuillez vous reconnecter.");
-      setBusy(false);
-      return;
-    }
-
-    const { data: organizationId, error: rpcError } = await sb.rpc(
-      "create_organization_with_admin",
-      {
-        org_name: company.trim(),
+      if (rpcError) {
+        setError(rpcError.message);
+        setBusy(false);
+        return;
       }
+
+      if (!organizationId) {
+        setError("La création de votre organisation a échoué.");
+        setBusy(false);
+        return;
+      }
+
+      setOrgId(organizationId as string);
+      setDone(true);
+      setBusy(false);
+    } catch {
+      setError("Une erreur inattendue est survenue.");
+      setBusy(false);
+    }
+  }
+
+  // Écran de chargement
+  if (checking) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[#f7f9fc]">
+        <div className="text-center">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#102b49] text-white shadow-xl">
+            <span className="text-4xl font-black animate-pulse">G</span>
+          </div>
+          <p className="text-sm font-semibold text-slate-700">
+            Préparation de votre espace...
+          </p>
+          <p className="mt-2 text-xs text-slate-400">
+            GULGO · Votre environnement professionnel
+          </p>
+        </div>
+      </main>
     );
-
-    if (rpcError) {
-      setError(rpcError.message);
-      setBusy(false);
-      return;
-    }
-
-    if (!organizationId) {
-      setError("La création de votre organisation a échoué.");
-      setBusy(false);
-      return;
-    }
-
-    setOrgId(organizationId as string);
-    setDone(true);
-    setBusy(false);
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#f5f7fb] flex flex-col">
+    <main className="min-h-screen bg-[#f5f7fa] text-slate-900">
 
-      {/* Background décoratif */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-blue-200/30 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-orange-100/40 blur-3xl" />
-      </div>
+      {/* HEADER */}
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
+        <div className="mx-auto flex h-[76px] max-w-[1400px] items-center justify-between px-5 sm:px-8 lg:px-12">
 
-      {/* En-tête */}
-      <header className="relative z-10 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Brand />
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#102b49] text-white shadow-sm">
+              <span className="text-3xl font-black">G</span>
+            </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-sm text-slate-500">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            Espace entreprise
+            <div>
+              <p className="text-lg font-extrabold tracking-tight text-[#102b49]">
+                GULGO
+              </p>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Enterprise Workspace
+              </p>
+            </div>
           </div>
+
+          <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 sm:flex">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-xs font-semibold text-slate-600">
+              Espace sécurisé
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => router.push("/login")}
+            className="text-sm font-semibold text-slate-500 transition hover:text-[#102b49]"
+          >
+            Retour à la connexion
+          </button>
         </div>
       </header>
 
-      {/* Contenu principal */}
-      <section className="relative z-10 flex flex-1 items-center justify-center px-5 py-12">
+      {/* MAIN CONTENT */}
+      <section className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8 lg:px-12 lg:py-16">
 
-        <div className="w-full max-w-2xl">
+        <div className="mb-10">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#3273a8]">
+            CONFIGURATION DE VOTRE ESPACE
+          </p>
 
-          {/* Introduction */}
-          <div className="mb-8 text-center">
+          <h1 className="max-w-3xl text-3xl font-extrabold leading-tight tracking-tight text-[#102b49] sm:text-4xl lg:text-[42px]">
+            Donnez vie à votre
+            <span className="text-[#3273a8]"> espace entreprise.</span>
+          </h1>
 
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-950 text-white shadow-lg shadow-blue-950/15">
-              {done ? (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-7 w-7"
-                >
-                  <path d="M5 12l4 4L19 6" />
-                </svg>
-              ) : (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  className="h-7 w-7"
-                >
-                  <path d="M12 3v18M3 12h18" />
-                  <rect x="4" y="4" width="16" height="16" rx="4" />
-                </svg>
-              )}
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
+            Configurez votre organisation et personnalisez votre environnement
+            professionnel pour commencer à profiter pleinement de GULGO.
+          </p>
+        </div>
+
+        {/* TWO COLUMNS */}
+        <div className="grid items-stretch gap-7 lg:grid-cols-[0.85fr_1.35fr]">
+
+          {/* LEFT PANEL */}
+          <aside className="relative flex min-h-[470px] flex-col overflow-hidden rounded-2xl bg-[#102b49] p-8 text-white sm:p-10">
+
+            <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full border border-white/10" />
+            <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full border border-white/10" />
+
+            <div className="relative z-10">
+
+              <div className="mb-12 flex h-14 w-14 items-center justify-center rounded-xl border border-white/15 bg-white/10">
+                <span className="text-4xl font-black">G</span>
+              </div>
+
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-blue-200">
+                BIENVENUE SUR GULGO
+              </p>
+
+              <h2 className="max-w-md text-3xl font-bold leading-tight">
+                Votre entreprise mérite un espace à son image.
+              </h2>
+
+              <p className="mt-5 max-w-md text-sm leading-7 text-blue-100/75">
+                Créez votre environnement professionnel, centralisez votre
+                organisation et construisez une identité qui vous ressemble.
+              </p>
             </div>
 
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-blue-700">
-              GULGO · Enterprise Workspace
-            </p>
+            <div className="relative z-10 mt-auto space-y-6 pt-12">
 
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
-              {done
-                ? "Votre organisation est créée !"
-                : "Bienvenue dans votre espace entreprise"}
-            </h1>
+              {[
+                {
+                  number: "01",
+                  title: "Un espace dédié",
+                  description: "Un environnement propre à votre organisation.",
+                },
+                {
+                  number: "02",
+                  title: "Votre identité",
+                  description: "Personnalisez votre espace avec votre logo.",
+                },
+                {
+                  number: "03",
+                  title: "Une gestion simplifiée",
+                  description: "Retrouvez votre espace professionnel en un seul endroit.",
+                },
+              ].map((item) => (
+                <div key={item.number} className="flex items-start gap-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-xs font-bold text-blue-100">
+                    {item.number}
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold">{item.title}</p>
+                    <p className="mt-1 text-xs leading-5 text-blue-100/65">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
 
-            <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-slate-500 sm:text-base">
-              {done
-                ? "Votre espace professionnel est prêt. Personnalisez maintenant son identité visuelle."
-                : "Quelques informations suffisent pour configurer votre environnement professionnel et commencer à utiliser GULGO."}
-            </p>
-          </div>
+            </div>
 
-          {/* Carte principale */}
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_70px_-25px_rgba(15,23,42,0.18)]">
+            <div className="pointer-events-none absolute -bottom-24 -right-16 text-[260px] font-black leading-none text-white/[0.035]">
+              G
+            </div>
+          </aside>
 
-            {/* Progression */}
+          {/* RIGHT PANEL */}
+          <section className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-[0_8px_40px_-20px_rgba(15,23,42,0.16)]">
+
+            {/* STEPS */}
             <div className="grid grid-cols-2 border-b border-slate-100">
 
-              <div className={`px-6 py-5 ${
-                !done ? "border-b-[3px] border-blue-900 bg-blue-50/40" : "bg-white"
+              <div className={`border-b-2 p-5 sm:p-7 ${
+                !done ? "border-[#3273a8] bg-blue-50/30" : "border-emerald-500"
               }`}>
                 <div className="flex items-center gap-3">
-                  <span className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+                  <span className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
                     done
                       ? "bg-emerald-100 text-emerald-700"
-                      : "bg-blue-950 text-white"
+                      : "bg-[#102b49] text-white"
                   }`}>
                     {done ? "✓" : "01"}
                   </span>
@@ -185,30 +289,30 @@ export default function Onboarding() {
                     <p className="text-sm font-bold text-slate-800">
                       Organisation
                     </p>
-                    <p className="text-xs text-slate-400">
-                      Informations générales
+                    <p className="hidden text-xs text-slate-400 sm:block">
+                      Création de votre espace
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className={`px-6 py-5 ${
-                done ? "border-b-[3px] border-blue-900 bg-blue-50/40" : "bg-white"
+              <div className={`border-b-2 p-5 sm:p-7 ${
+                done ? "border-[#3273a8] bg-blue-50/30" : "border-transparent"
               }`}>
                 <div className="flex items-center gap-3">
-                  <span className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+                  <span className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
                     done
-                      ? "bg-blue-950 text-white"
+                      ? "bg-[#102b49] text-white"
                       : "bg-slate-100 text-slate-500"
                   }`}>
                     02
                   </span>
                   <div>
                     <p className="text-sm font-bold text-slate-800">
-                      Identité visuelle
+                      Personnalisation
                     </p>
-                    <p className="text-xs text-slate-400">
-                      Logo de votre entreprise
+                    <p className="hidden text-xs text-slate-400 sm:block">
+                      Votre identité visuelle
                     </p>
                   </div>
                 </div>
@@ -216,27 +320,35 @@ export default function Onboarding() {
 
             </div>
 
-            <div className="p-6 sm:p-10">
+            {/* FORM CONTENT */}
+            <div className="flex flex-1 flex-col justify-center p-6 sm:p-10">
 
               {!done ? (
 
-                <form onSubmit={createOrg} className="space-y-7">
+                <form onSubmit={createOrg} className="w-full space-y-8">
 
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900">
-                      Informations de votre entreprise
+                    <span className="text-xs font-bold uppercase tracking-widest text-[#3273a8]">
+                      ÉTAPE 01 / 02
+                    </span>
+
+                    <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#102b49]">
+                      Création de votre organisation
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Indiquez le nom officiel ou commercial de votre organisation.
+
+                    <p className="mt-3 text-sm leading-6 text-slate-500">
+                      Commençons par identifier votre entreprise.
+                      Vous pourrez personnaliser les autres informations
+                      depuis votre espace.
                     </p>
                   </div>
 
                   <div>
                     <label
                       htmlFor="company"
-                      className="mb-2 block text-sm font-semibold text-slate-700"
+                      className="mb-3 block text-sm font-bold text-slate-700"
                     >
-                      Nom de l'entreprise
+                      Nom de votre entreprise
                       <span className="ml-1 text-red-500">*</span>
                     </label>
 
@@ -249,105 +361,126 @@ export default function Onboarding() {
                       placeholder="Ex. : La SG-SERVICE"
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-800 focus:bg-white focus:ring-4 focus:ring-blue-900/10"
+                      className="h-14 w-full rounded-xl border border-slate-200 bg-[#fafbfd] px-5 text-sm font-medium text-slate-800 outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-slate-300 focus:border-[#3273a8] focus:bg-white focus:ring-4 focus:ring-blue-100"
                     />
 
-                    <p className="mt-2 text-xs text-slate-400">
-                      Vous pourrez retrouver cet espace dans votre tableau de bord.
+                    <p className="mt-3 text-xs text-slate-400">
+                      Le nom de votre organisation sera utilisé dans votre espace professionnel.
                     </p>
                   </div>
 
                   {error && (
-                    <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                      <span className="font-bold">!</span>
-                      <p>{error}</p>
+                    <div
+                      role="alert"
+                      className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+                    >
+                      {error}
                     </div>
                   )}
 
-                  <button
-                    type="submit"
-                    disabled={busy || !company.trim()}
-                    className="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-950 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-blue-950/15 transition hover:bg-blue-900 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {busy ? (
-                      <>
-                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        Création de votre espace...
-                      </>
-                    ) : (
-                      <>
-                        Créer mon espace entreprise
-                        <span className="text-lg">→</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="border-t border-slate-100 pt-7">
 
-                  <p className="text-center text-xs text-slate-400">
-                    En créant votre organisation, vous accédez à votre environnement professionnel GULGO.
-                  </p>
+                    <button
+                      type="submit"
+                      disabled={busy || !company.trim()}
+                      className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-[#102b49] px-6 text-sm font-bold text-white transition hover:bg-[#193e63] focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {busy ? (
+                        <>
+                          <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                          Création en cours...
+                        </>
+                      ) : (
+                        <>
+                          Créer mon espace entreprise
+                          <span className="text-lg">→</span>
+                        </>
+                      )}
+                    </button>
 
+                    <p className="mt-5 text-center text-xs leading-5 text-slate-400">
+                      La création de votre espace vous permettra
+                      d'accéder à votre environnement GULGO.
+                    </p>
+
+                  </div>
                 </form>
 
               ) : (
 
-                <div className="space-y-7">
+                <div className="space-y-8">
 
-                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-5">
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
-                        ✓
-                      </span>
-                      <div>
-                        <h2 className="font-bold text-emerald-900">
-                          Organisation créée avec succès
-                        </h2>
-                        <p className="mt-1 text-sm leading-6 text-emerald-800/80">
-                          Votre espace {company} est maintenant configuré. Vous pouvez ajouter votre logo pour personnaliser votre environnement.
-                        </p>
-                      </div>
+                  <div className="flex items-start gap-4 rounded-xl border border-emerald-100 bg-emerald-50 p-5">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+                      ✓
+                    </span>
+
+                    <div>
+                      <h2 className="font-bold text-emerald-900">
+                        Votre organisation est créée !
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-emerald-800/80">
+                        {company} dispose maintenant de son propre espace
+                        sur GULGO. Vous pouvez passer à la personnalisation.
+                      </p>
                     </div>
                   </div>
 
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900">
-                      Personnalisez votre identité visuelle
+                    <span className="text-xs font-bold uppercase tracking-widest text-[#3273a8]">
+                      ÉTAPE 02 / 02
+                    </span>
+
+                    <h2 className="mt-3 text-2xl font-extrabold text-[#102b49]">
+                      Votre identité visuelle
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Ajoutez le logo de votre entreprise pour renforcer son identité sur GULGO.
+
+                    <p className="mt-3 text-sm leading-6 text-slate-500">
+                      Ajoutez le logo de votre organisation pour
+                      personnaliser votre espace professionnel.
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 sm:p-7">
+                  <div className="rounded-xl border border-slate-200 bg-[#fafbfd] p-5 sm:p-7">
                     <LogoUploader organizationId={orgId} />
                   </div>
+
+                  {error && (
+                    <p role="alert" className="text-sm text-red-600">
+                      {error}
+                    </p>
+                  )}
 
                   <button
                     type="button"
                     onClick={() => router.push("/client")}
-                    className="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-950 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-blue-950/15 transition hover:bg-blue-900"
+                    className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-[#102b49] px-6 text-sm font-bold text-white transition hover:bg-[#193e63]"
                   >
-                    Accéder à mon espace entreprise
+                    Accéder à mon espace
                     <span className="text-lg">→</span>
                   </button>
 
                   <p className="text-center text-xs text-slate-400">
-                    Vous pourrez également personnaliser votre espace ultérieurement.
+                    Vous pourrez compléter votre identité visuelle ultérieurement.
                   </p>
 
                 </div>
               )}
 
             </div>
-          </div>
-
-          {/* Pied de page */}
-          <footer className="mt-7 text-center">
-            <p className="text-xs text-slate-400">
-              © {new Date().getFullYear()} GULGO · Votre environnement professionnel en toute confiance.
-            </p>
-          </footer>
-
+          </section>
         </div>
+
+        {/* FOOTER */}
+        <footer className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-7 text-xs text-slate-400 sm:flex-row">
+          <p>
+            © {new Date().getFullYear()} GULGO. Tous droits réservés.
+          </p>
+          <p>
+            Votre espace professionnel, en toute confiance.
+          </p>
+        </footer>
+
       </section>
     </main>
   );

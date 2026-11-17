@@ -12,7 +12,7 @@ export default async function AdminLayout({
 }) {
   const supabase = await createClient();
 
-  // 1. Vérifier l'authentification
+  // 1. Vérifier que l'utilisateur est authentifié
   const {
     data: { user },
     error: authError,
@@ -22,17 +22,17 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  // 2. Vérifier le rôle interne GULGO
+  // 2. Vérifier le statut SUPER_ADMIN dans la base Supabase
   const {
-    data: isStaff,
-    error: staffError,
-  } = await supabase.rpc("is_gulgo_staff");
+    data: isPlatformAdmin,
+    error: adminError,
+  } = await supabase.rpc("is_platform_admin");
 
-  // En cas d'erreur, refuser l'accès par défaut
-  if (staffError || isStaff !== true) {
+  // 3. Refuser l'accès en cas d'erreur ou d'absence du statut
+  if (adminError || isPlatformAdmin !== true) {
     redirect("/client");
   }
 
-  // 3. Autoriser uniquement le personnel GULGO
+  // 4. Autoriser uniquement le SUPER_ADMIN
   return <AdminShell>{children}</AdminShell>;
 }

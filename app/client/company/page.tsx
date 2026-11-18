@@ -18,6 +18,7 @@ import {
 
 import { createClient } from "@/lib/supabase/client";
 import { LogoUploader } from "@/components/LogoUploader";
+import Image from "next/image";
 
 type Enterprise = {
   id: string;
@@ -299,7 +300,25 @@ export default function Company() {
         <div className="relative p-6 md:p-8">
           <div className="company-hero-grid">
             <div className="company-header-identity">
-              <div className="company-header-logo">{(org?.logo_url || null) ? <img src={String(org?.logo_url)} alt="Logo de l’entreprise" /> : <span>{(ent.legal_name || org?.name || "E").trim().charAt(0).toUpperCase()}</span>}</div>
+              <div className="company-header-logo relative overflow-hidden">
+                {org?.logo_url ? (
+                  <Image
+                  src={org.logo_url}
+                  alt="Logo de l’entreprise"
+                  width={96}
+                  height={96}
+                  unoptimized
+                  className="h-full w-full object-contain"
+                  />
+                ) : (
+                <span>
+                  {(ent.legal_name || org?.name || "E")
+                  .trim()
+                  .charAt(0)
+                  .toUpperCase()}
+                  </span>
+                )}
+                </div>
               <div className="company-header-copy">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span className="badge badge-blue">
@@ -754,8 +773,75 @@ function SmartPlaceField({label, icon, value, onChange, kind, placeholder}:{labe
     ],
     []
   );
-  useEffect(()=>{let cancelled=false; if((kind!=="country")&&value.trim().length>=3){const timer=setTimeout(async()=>{try{const q=encodeURIComponent(value.trim()); const url=kind==="postal"?`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&q=${q}`:`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&city=${q}`; const r=await fetch(url,{headers:{"Accept-Language":"fr"}}); const data=await r.json(); const vals=(data||[]).map((x:any)=>kind==="postal"?(x.address?.postcode?`${x.address.postcode} · ${x.address.city||x.address.town||x.address.village||x.display_name}`:x.display_name):(x.address?.city||x.address?.town||x.address?.village||x.name)).filter(Boolean); if(!cancelled)setSuggestions(Array.from(new Set(vals)).slice(0,6) as string[]);}catch{if(!cancelled)setSuggestions([])}},300); return()=>{cancelled=true;clearTimeout(timer)}}else setSuggestions([]); return()=>{}},[value,kind]);
-  const listId=`gulgo-${kind}-suggestions`; const filtered=kind==="country"&&value.length>=3?countries.filter((c: string)=>c.toLocaleLowerCase("fr").includes(value.toLocaleLowerCase("fr"))).slice(0,8):suggestions;
+  useEffect(() => {
+    if (kind === "country" || value.trim().length < 3) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const timer = setTimeout(async () => {
+      try {
+        const q = encodeURIComponent(value.trim());
+        const url =
+          kind === "postal"
+            ? `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&q=${q}`
+            : `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&city=${q}`;
+
+        const response = await fetch(url, {
+          headers: { "Accept-Language": "fr" },
+        });
+        const data = await response.json();
+
+        const values = (data || [])
+          .map((x: any) =>
+            kind === "postal"
+              ? x.address?.postcode
+                ? `${x.address.postcode} · ${
+                    x.address.city ||
+                    x.address.town ||
+                    x.address.village ||
+                    x.display_name
+                  }`
+                : x.display_name
+              : x.address?.city ||
+                x.address?.town ||
+                x.address?.village ||
+                x.name
+          )
+          .filter(Boolean);
+
+        if (!cancelled) {
+          setSuggestions(
+            Array.from(new Set(values)).slice(0, 6) as string[]
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setSuggestions([]);
+        }
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [value, kind]);
+
+  const listId = `gulgo-${kind}-suggestions`;
+  const filtered =
+    kind === "country" && value.length >= 3
+      ? countries
+          .filter((country: string) =>
+            country
+              .toLocaleLowerCase("fr")
+              .includes(value.toLocaleLowerCase("fr"))
+          )
+          .slice(0, 8)
+      : kind !== "country" && value.trim().length >= 3
+        ? suggestions
+        : [];
   return <div><label className="label">{label}</label><div className="relative"><span className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-slate-400">{icon}</span><input className="field pl-10" list={listId} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} autoComplete="off"/><datalist id={listId}>{filtered.map((x: string)=><option key={x} value={x}/>)}</datalist></div>{value.length>=3&&<span className="gulgo-smart-hint">Suggestions activées · sélectionnez une proposition ou continuez votre saisie</span>}</div>
 }
 

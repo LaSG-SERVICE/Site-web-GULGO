@@ -78,6 +78,67 @@ const DEFAULT_STATUS: StatusInfo = {
 };
 
 /* ================================================================
+   RÉCUPÉRATION DES DONNÉES
+================================================================ */
+
+/**
+ * Récupère les évaluations autorisées par les politiques RLS de Supabase.
+ * Cette fonction ne modifie aucun état React : elle retourne uniquement
+ * les données ou propage une erreur à son appelant.
+ */
+async function retrieveEvaluations(): Promise<Evaluation[]> {
+  const sb = createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await sb.auth.getUser();
+
+  if (authError) {
+    throw authError;
+  }
+
+  if (!user) {
+    throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
+  }
+
+  /*
+   * Les politiques RLS de Supabase doivent limiter
+   * les évaluations aux entreprises autorisées.
+   *
+   * On ne filtre pas ici par created_by :
+   * plusieurs membres d'une même entreprise peuvent
+   * devoir consulter un même dossier.
+   */
+  const { data, error: queryError } = await sb
+    .from("evaluations")
+    .select(`
+      id,
+      enterprise_id,
+      observation_period,
+      created_by,
+      created_at,
+      updated_at,
+      version,
+      status,
+      score
+    `)
+    .order("created_at", { ascending: false });
+
+  if (queryError) {
+    throw queryError;
+  }
+
+  return (data ?? []) as Evaluation[];
+}
+
+function getErrorMessage(err: unknown): string {
+  return err instanceof Error
+    ? err.message
+    : "Une erreur est survenue lors de la récupération des évaluations.";
+}
+
+/* ================================================================
    PAGE PRINCIPALE
 ================================================================ */
 
@@ -88,86 +149,57 @@ export default function Evaluations() {
   const [refreshing, setRefreshing] = useState(false);
 
   /* ==============================================================
-     RÉCUPÉRATION DES ÉVALUATIONS
+     CHARGEMENT INITIAL
   ============================================================== */
 
-  const fetchEvaluations = useCallback(async (isRefresh = false) => {
-    if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
+  useEffect(() => {
+    let active = true;
+
+    async function loadInitialEvaluations() {
+      try {
+        const data = await retrieveEvaluations();
+
+        if (active) {
+          setEvaluations(data);
+        }
+      } catch (err) {
+        console.error("Erreur de récupération des évaluations :", err);
+
+        if (active) {
+          setError(getErrorMessage(err));
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
     }
 
+    void loadInitialEvaluations();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  /* ==============================================================
+     ACTUALISATION MANUELLE
+  ============================================================== */
+
+  const fetchEvaluations = useCallback(async () => {
+    setRefreshing(true);
     setError(null);
 
     try {
-      const sb = createClient();
-
-      const {
-        data: { user },
-        error: authError,
-      } = await sb.auth.getUser();
-
-      if (authError) {
-        throw authError;
-      }
-
-      if (!user) {
-        throw new Error(
-          "Votre session a expiré. Veuillez vous reconnecter."
-        );
-      }
-
-      /*
-       * Les politiques RLS de Supabase doivent limiter
-       * les évaluations aux entreprises autorisées.
-       *
-       * On ne filtre pas ici par created_by :
-       * plusieurs membres d'une même entreprise peuvent
-       * devoir consulter un même dossier.
-       */
-
-      const { data, error: queryError } = await sb
-        .from("evaluations")
-        .select(`
-          id,
-          enterprise_id,
-          observation_period,
-          created_by,
-          created_at,
-          updated_at,
-          version,
-          status,
-          score
-        `)
-        .order("created_at", { ascending: false });
-
-      if (queryError) {
-        throw queryError;
-      }
-
-      setEvaluations((data ?? []) as Evaluation[]);
+      const data = await retrieveEvaluations();
+      setEvaluations(data);
     } catch (err) {
-      console.error(
-        "Erreur de récupération des évaluations :",
-        err
-      );
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Une erreur est survenue lors de la récupération des évaluations."
-      );
+      console.error("Erreur de récupération des évaluations :", err);
+      setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, []);
-
-  useEffect(() => {
-    void fetchEvaluations();
-
-  }, [fetchEvaluations]);
 
   /* ==============================================================
      INDICATEURS
@@ -222,14 +254,13 @@ export default function Evaluations() {
             Impossible de charger les évaluations
           </h2>
 
-          <p className="mt-2 text-sm leading-6 text-red-700">
-            {error}
-          </p>
+          <p className="mt-2 text-sm leading-6 text-red-700">{error}</p>
         </div>
 
         <button
           type="button"
           onClick={() => void fetchEvaluations()}
+          disabled={refreshing}
           className="btn btn-secondary inline-flex items-center gap-2"
         >
           <RefreshCw className="h-4 w-4" />
@@ -245,16 +276,11 @@ export default function Evaluations() {
 
   return (
     <div className="gulgo-client-page gulgo-evaluations-page space-y-8">
-
-      {/* ==========================================================
-          HEADER
-      ========================================================== */}
-
+      {/* HEADER */}
       <section className="relative overflow-hidden rounded-3xl bg-[var(--navy)] px-6 py-8 text-white shadow-[0_20px_50px_rgba(8,27,51,0.14)] md:px-9 md:py-10">
         <div className="bg-grid absolute inset-0 opacity-10" />
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-
           <div className="max-w-2xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold tracking-wide text-white/80">
               <ClipboardCheck className="h-3.5 w-3.5" />
@@ -284,12 +310,8 @@ export default function Evaluations() {
         </div>
       </section>
 
-      {/* ==========================================================
-          KPI
-      ========================================================== */}
-
+      {/* KPI */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
         <KpiCard
           icon={<FileText className="h-5 w-5" />}
           label="Dossiers"
@@ -317,21 +339,13 @@ export default function Evaluations() {
           value={String(scoreProduced)}
           description="Scores calculés ou validés"
         />
-
       </section>
 
-      {/* ==========================================================
-          LISTE DES ÉVALUATIONS
-      ========================================================== */}
-
+      {/* LISTE DES ÉVALUATIONS */}
       <section className="grid gap-5 lg:grid-cols-[1fr_340px]">
-
         {/* TABLEAU */}
-
         <div className="card overflow-hidden">
-
           <div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-
             <div>
               <h2 className="text-base font-semibold text-[var(--ink)]">
                 Liste des évaluations
@@ -343,7 +357,6 @@ export default function Evaluations() {
             </div>
 
             <div className="flex items-center gap-3">
-
               <div className="inline-flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
                 <Activity className="h-3.5 w-3.5" />
                 {total} dossier{total > 1 ? "s" : ""}
@@ -351,27 +364,22 @@ export default function Evaluations() {
 
               <button
                 type="button"
-                onClick={() => void fetchEvaluations(true)}
+                onClick={() => void fetchEvaluations()}
                 disabled={refreshing}
                 aria-label="Actualiser les évaluations"
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
               >
                 <RefreshCw
-                  className={`h-4 w-4 ${
-                    refreshing ? "animate-spin" : ""
-                  }`}
+                  className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
                 />
               </button>
-
             </div>
           </div>
 
+
           {/* DESKTOP */}
-
           <div className="hidden overflow-x-auto md:block">
-
             <table className="table w-full">
-
               <thead>
                 <tr>
                   <th>Évaluation</th>
@@ -385,14 +393,9 @@ export default function Evaluations() {
               </thead>
 
               <tbody>
-
                 {evaluations.length === 0 ? (
-
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="py-14 text-center"
-                    >
+                    <td colSpan={7} className="py-14 text-center">
                       <div className="mx-auto flex max-w-sm flex-col items-center">
                         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
                           <FileText className="h-6 w-6" />
@@ -417,32 +420,22 @@ export default function Evaluations() {
                       </div>
                     </td>
                   </tr>
-
                 ) : (
-
                   evaluations.map((evaluation) => {
-
                     const status = getStatusInfo(evaluation.status);
-
                     const period =
                       evaluation.observation_period ||
-                      new Date(evaluation.created_at)
-                        .getFullYear()
-                        .toString();
-
+                      new Date(evaluation.created_at).getFullYear().toString();
                     const updated =
                       evaluation.updated_at || evaluation.created_at;
 
                     return (
-
                       <tr key={evaluation.id}>
-
                         <td>
                           <div>
                             <div className="font-semibold text-[var(--ink)]">
                               SP-{evaluation.id.slice(0, 8).toUpperCase()}
                             </div>
-
                             <div className="mt-1 text-xs text-[var(--muted)]">
                               Dossier Score Pass
                             </div>
@@ -487,28 +480,18 @@ export default function Evaluations() {
                             <ArrowRight className="h-4 w-4" />
                           </Link>
                         </td>
-
                       </tr>
-
                     );
                   })
-
                 )}
-
               </tbody>
-
             </table>
-
           </div>
 
           {/* MOBILE */}
-
           <div className="divide-y divide-slate-200 md:hidden">
-
             {evaluations.length === 0 ? (
-
               <div className="p-6 text-center">
-
                 <p className="font-semibold text-slate-800">
                   Aucun dossier enregistré
                 </p>
@@ -524,27 +507,17 @@ export default function Evaluations() {
                   <Plus className="h-4 w-4" />
                   Créer un dossier
                 </Link>
-
               </div>
-
             ) : (
-
               evaluations.map((evaluation) => {
-
                 const status = getStatusInfo(evaluation.status);
-
                 const period =
                   evaluation.observation_period ||
-                  new Date(evaluation.created_at)
-                    .getFullYear()
-                    .toString();
+                  new Date(evaluation.created_at).getFullYear().toString();
 
                 return (
-
                   <div key={evaluation.id} className="p-5">
-
                     <div className="flex items-start justify-between gap-4">
-
                       <div>
                         <div className="font-semibold text-[var(--ink)]">
                           SP-{evaluation.id.slice(0, 8).toUpperCase()}
@@ -556,33 +529,24 @@ export default function Evaluations() {
                       </div>
 
                       <StatusBadge status={status} />
-
                     </div>
 
                     <div className="mt-5 grid grid-cols-2 gap-3">
-
-                      <MobileInfo
-                        label="Période"
-                        value={period}
-                      />
-
+                      <MobileInfo label="Période" value={period} />
                       <MobileInfo
                         label="Score"
                         value={formatScore(evaluation.score)}
                       />
-
                       <MobileInfo
                         label="Dernière activité"
                         value={formatDate(
                           evaluation.updated_at || evaluation.created_at
                         )}
                       />
-
                       <MobileInfo
                         label="Version"
                         value={evaluation.version || "V1.0"}
                       />
-
                     </div>
 
                     <Link
@@ -592,24 +556,16 @@ export default function Evaluations() {
                       Ouvrir le dossier
                       <ArrowRight className="h-4 w-4" />
                     </Link>
-
                   </div>
-
                 );
               })
-
             )}
-
           </div>
-
         </div>
 
         {/* SIDEBAR */}
-
         <aside className="space-y-5">
-
           <div className="premium-card p-6">
-
             <div className="icon-box mb-5">
               <ShieldCheck className="h-5 w-5" />
             </div>
@@ -625,33 +581,26 @@ export default function Evaluations() {
             </p>
 
             <div className="mt-5 space-y-3">
-
               <SideFeature
                 icon={<ClipboardCheck className="h-4 w-4" />}
                 text="37 variables à renseigner"
               />
-
               <SideFeature
                 icon={<FileText className="h-4 w-4" />}
                 text="Documents et preuves associés"
               />
-
               <SideFeature
                 icon={<ShieldCheck className="h-4 w-4" />}
                 text="Vérification par les experts GULGO"
               />
-
               <SideFeature
                 icon={<BarChart3 className="h-4 w-4" />}
                 text="Calcul et restitution du score"
               />
-
             </div>
-
           </div>
 
           <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-6">
-
             <div className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
               À retenir
             </div>
@@ -662,13 +611,9 @@ export default function Evaluations() {
               règles méthodologiques doivent être examinées avant la
               production du Score Pass.
             </p>
-
           </div>
-
         </aside>
-
       </section>
-
     </div>
   );
 }
@@ -751,31 +696,21 @@ function KpiCard({
 }) {
   return (
     <div className="card group p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_35px_rgba(16,24,40,0.08)]">
-
       <div className="flex items-start justify-between">
-
-        <div className="icon-box">
-          {icon}
-        </div>
-
+        <div className="icon-box">{icon}</div>
         <div className="text-2xl font-semibold tracking-tight text-[var(--ink)]">
           {value}
         </div>
-
       </div>
 
       <div className="mt-5">
-
         <div className="text-sm font-semibold text-[var(--ink)]">
           {label}
         </div>
-
         <div className="mt-1 text-xs text-[var(--muted)]">
           {description}
         </div>
-
       </div>
-
     </div>
   );
 }
@@ -793,7 +728,6 @@ function MobileInfo({
 }) {
   return (
     <div className="rounded-xl bg-slate-50 p-3">
-
       <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
         {label}
       </div>
@@ -801,7 +735,6 @@ function MobileInfo({
       <div className="mt-1 break-words text-sm font-semibold text-slate-700">
         {value}
       </div>
-
     </div>
   );
 }
@@ -819,13 +752,10 @@ function SideFeature({
 }) {
   return (
     <div className="flex items-center gap-3 text-sm text-slate-600">
-
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
         {icon}
       </div>
-
       <span>{text}</span>
-
     </div>
   );
 }
